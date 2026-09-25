@@ -1,13 +1,16 @@
 import 'package:flutter/widgets.dart';
 
 enum Dominio {
-  atencion('Atención'),
-  memoria('Memoria'),
-  funcionesEjecutiva('Funciones Ejecutiva'),
-  fluidezVerbal('Fluidez Verbal');
+  atencion('Atención', 2),
+  memoria('Memoria', 3),
+  funcionesEjecutiva('Funciones ejecutivas', 15),
+  fluidezVerbal('Fluidez verbal', 3);
 
-  const Dominio(this.etiqueta);
+  const Dominio(this.etiqueta, this.cantidadActividades);
   final String etiqueta;
+
+  /// Actividades que componen el dominio en la prueba completa.
+  final int cantidadActividades;
 }
 
 enum Dificultad {
