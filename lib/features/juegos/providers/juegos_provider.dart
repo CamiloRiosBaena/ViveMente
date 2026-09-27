@@ -6,6 +6,7 @@ import 'package:vivamente/core/models/game.dart';
 // unirlas en develop no se tocan las mismas líneas y el merge no choca.
 
 // Atención 1 · Tren de las señales
+import 'package:vivamente/features/atencion/tren_senales/tren_senales_game.dart';
 
 // Atención 2 · Encuentra el objetivo
 
@@ -30,6 +31,7 @@ final dificultadJuegoProvider =
 /// elegido. Para sumar un juego basta con agregarlo en su bloque.
 final juegosProvider = Provider<List<Game>>((ref) => [
       // Atención 1 · Tren de las señales
+      TrenSenalesGame(dificultad: ref.watch(dificultadJuegoProvider(TrenSenalesGame.idJuego))),
 
       // Atención 2 · Encuentra el objetivo
 
