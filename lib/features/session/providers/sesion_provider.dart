@@ -1,11 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vivamente/core/models/game.dart';
 import 'package:vivamente/core/models/persona.dart';
 import 'package:vivamente/core/services/registro_repository.dart';
-
-/// Actividades hechas por dominio. Sin avance guardado todavía: todo en cero.
-/// Saldrá del [Ciclo] del adulto cuando se persista.
-final progresoProvider = Provider<Map<Dominio, int>>((_) => {for (final d in Dominio.values) d: 0});
 
 class SesionState {
   const SesionState({this.evaluador, this.cedulaAdulto = '', this.adulto});
