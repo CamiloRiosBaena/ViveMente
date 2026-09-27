@@ -9,6 +9,8 @@ import 'package:vivamente/core/theme/dominio_estilo.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
 import 'package:vivamente/core/widgets/cabecera_marca.dart';
 import 'package:vivamente/core/widgets/tarjeta_elegible.dart';
+import 'package:vivamente/features/juegos/providers/juegos_provider.dart';
+import 'package:vivamente/features/juegos/providers/resultados_provider.dart';
 import 'package:vivamente/features/session/providers/sesion_provider.dart';
 import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
 
@@ -93,7 +95,9 @@ class _Inicio extends ConsumerWidget {
                   _TarjetaDominio(
                     dominio: d,
                     hechas: progreso[d] ?? 0,
-                    onTap: () => _aviso(context, 'Las actividades de ${d.etiqueta} aún no están disponibles.'),
+                    onTap: ref.watch(juegosDeDominioProvider(d)).isEmpty
+                        ? () => _aviso(context, 'Las actividades de ${d.etiqueta} aún no están disponibles.')
+                        : () => context.push('/dominio/${d.name}'),
                   ),
                   const SizedBox(height: 12),
                 ],
