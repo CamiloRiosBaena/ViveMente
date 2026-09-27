@@ -9,6 +9,7 @@ import 'package:vivamente/core/models/game.dart';
 import 'package:vivamente/features/atencion/tren_senales/tren_senales_game.dart';
 
 // Atención 2 · Encuentra el objetivo
+import 'package:vivamente/features/atencion/encuentra_objetivo/encuentra_objetivo_game.dart';
 
 // Atención 3
 
@@ -34,6 +35,7 @@ final juegosProvider = Provider<List<Game>>((ref) => [
       TrenSenalesGame(dificultad: ref.watch(dificultadJuegoProvider(TrenSenalesGame.idJuego))),
 
       // Atención 2 · Encuentra el objetivo
+      EncuentraObjetivoGame(dificultad: ref.watch(dificultadJuegoProvider(EncuentraObjetivoGame.idJuego))),
 
       // Atención 3
     ]);
