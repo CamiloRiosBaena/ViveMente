@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Micrófono para dictar palabras en «Palabras con una letra». -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="vivamente"
         android:name="${applicationName}"
@@ -45,6 +47,10 @@
              voz del equipo (lectura de instrucciones con flutter_tts). -->
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
+        <!-- Igual para el reconocimiento de voz (dictado con speech_to_text). -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
         </intent>
     </queries>
 </manifest>

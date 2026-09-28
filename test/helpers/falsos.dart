@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:vivamente/core/services/dictado.dart';
 import 'package:vivamente/core/services/reloj.dart';
 import 'package:vivamente/core/services/voz.dart';
 
@@ -47,6 +48,46 @@ class VozFalsa implements Voz {
   @override
   Future<void> callar() async {
     await Future<void>.value();
+    _alTerminar?.call();
+  }
+}
+
+/// Dictado que la prueba alimenta a mano con [oir].
+class DictadoFalso implements Dictado {
+  /// `false` simula un equipo sin micrófono o sin permiso.
+  bool disponible = true;
+  bool escuchando = false;
+
+  /// Cuántas veces se abrió el micrófono.
+  int aperturas = 0;
+  void Function(String texto, bool esFinal)? _alOir;
+  VoidCallback? _alTerminar;
+
+  /// Simula que el reconocedor oyó [texto].
+  void oir(String texto, {bool esFinal = true}) => _alOir?.call(texto, esFinal);
+
+  /// Simula que el reconocedor se cerró solo, tras un silencio.
+  void cerrarSolo() {
+    escuchando = false;
+    _alTerminar?.call();
+  }
+
+  @override
+  set alTerminar(VoidCallback? callback) => _alTerminar = callback;
+
+  @override
+  Future<bool> escuchar({required void Function(String texto, bool esFinal) alOir}) async {
+    if (!disponible) return false;
+    _alOir = alOir;
+    escuchando = true;
+    aperturas++;
+    return true;
+  }
+
+  @override
+  Future<void> detener() async {
+    if (!escuchando) return;
+    escuchando = false;
     _alTerminar?.call();
   }
 }
