@@ -41,10 +41,5 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-        <!-- Desde Android 11 hace falta declararlo para encontrar el motor de
-             voz del equipo (lectura de instrucciones con flutter_tts). -->
-        <intent>
-            <action android:name="android.intent.action.TTS_SERVICE"/>
-        </intent>
     </queries>
 </manifest>
