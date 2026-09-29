@@ -100,6 +100,12 @@ class DestelloRefuerzo extends StatelessWidget {
   }
 }
 
+/// Frases de elogio para los aciertos. Se van turnando con el id del refuerzo
+/// para que no se repita siempre la misma.
+const _elogios = ['¡Muy bien!', '¡Excelente!', '¡Así se hace!', '¡Bien hecho!'];
+
+String elogioRefuerzo(int id) => _elogios[id % _elogios.length];
+
 /// El refuerzo también se siente en la mano, en equipos con vibración.
 void vibrarRefuerzo({required bool positivo}) =>
     positivo ? HapticFeedback.lightImpact() : HapticFeedback.heavyImpact();

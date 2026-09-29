@@ -73,6 +73,9 @@ class BusquedaJuegoView extends ConsumerWidget {
               ),
             ],
           ),
+          Positioned.fill(
+            child: DestelloRefuerzo(color: _colorRetro(s.retro), id: s.retroId, intensidad: 0.7),
+          ),
           if (s.pausado)
             Positioned.fill(child: _Pausa(onSeguir: notifier.reanudar, onSalir: onSalir)),
         ],
@@ -82,9 +85,16 @@ class BusquedaJuegoView extends ConsumerWidget {
 
   static MensajeRefuerzo? _mensaje(EncuentraObjetivoState s) => switch (s.retro) {
         RetroBusqueda.correcto => MensajeRefuerzo(
-            texto: '¡Correcto!', icono: Icons.check_circle_rounded, color: AppColors.verde, id: s.retroId),
+            texto: elogioRefuerzo(s.retroId), icono: Icons.check_circle_rounded, color: AppColors.verde, id: s.retroId),
         RetroBusqueda.incorrecto => MensajeRefuerzo(
-            texto: 'Incorrecto', icono: Icons.cancel_rounded, color: AppColors.rojo, id: s.retroId),
+            texto: 'Ese no es', icono: Icons.cancel_rounded, color: AppColors.rojo, id: s.retroId),
+        RetroBusqueda.ninguna => null,
+      };
+
+  // Los toques son seguidos, así que el destello es algo más suave que en el tren.
+  static Color? _colorRetro(RetroBusqueda r) => switch (r) {
+        RetroBusqueda.correcto => AppColors.verde,
+        RetroBusqueda.incorrecto => AppColors.rojo,
         RetroBusqueda.ninguna => null,
       };
 }

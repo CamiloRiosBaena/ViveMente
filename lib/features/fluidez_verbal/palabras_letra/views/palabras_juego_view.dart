@@ -164,6 +164,7 @@ class _PalabrasJuegoViewState extends ConsumerState<PalabrasJuegoView> {
                 ),
             ],
           ),
+          Positioned.fill(child: DestelloRefuerzo(color: _colorRetro(s.retro), id: s.retroId)),
           if (s.pausado) Positioned.fill(child: _Pausa(onSeguir: notifier.reanudar, onSalir: widget.onSalir)),
         ],
       ),
@@ -201,7 +202,7 @@ class _PalabrasJuegoViewState extends ConsumerState<PalabrasJuegoView> {
     final p = s.palabraRetro;
     return switch (s.retro) {
       Veredicto.valida => MensajeRefuerzo(
-          texto: '¡Bien!', icono: Icons.check_circle_rounded, color: AppColors.verde, id: s.retroId),
+          texto: elogioRefuerzo(s.retroId), icono: Icons.check_circle_rounded, color: AppColors.verde, id: s.retroId),
       Veredicto.repetida => MensajeRefuerzo(
           texto: 'Ya la dijo: «$p»', icono: Icons.replay_rounded, color: AppColors.naranja, id: s.retroId),
       Veredicto.otraLetra => MensajeRefuerzo(
@@ -211,6 +212,13 @@ class _PalabrasJuegoViewState extends ConsumerState<PalabrasJuegoView> {
       null => null,
     };
   }
+
+  static Color? _colorRetro(Veredicto? v) => switch (v) {
+        Veredicto.valida => AppColors.verde,
+        Veredicto.repetida => AppColors.naranja,
+        Veredicto.otraLetra || Veredicto.noEsPalabra => AppColors.rojo,
+        null => null,
+      };
 }
 
 /// «Palabras que empiecen con la letra:» y la letra grande a la derecha.

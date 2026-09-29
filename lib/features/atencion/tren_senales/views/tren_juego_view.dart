@@ -212,14 +212,12 @@ class _Aviso extends StatelessWidget {
 
   final TrenSenalesState estado;
 
-  static const _elogios = ['¡Muy bien!', '¡Excelente!', '¡Así se hace!', '¡Bien hecho!'];
-
   MensajeRefuerzo? get _mensaje {
     final color = estado.objetivo.etiqueta;
     final id = estado.retroId;
     return switch (estado.retro) {
       RetroTren.bien => MensajeRefuerzo(
-          texto: _elogios[id % _elogios.length], icono: Icons.check_circle_rounded, color: AppColors.verde, id: id),
+          texto: elogioRefuerzo(id), icono: Icons.check_circle_rounded, color: AppColors.verde, id: id),
       RetroTren.noEra =>
         MensajeRefuerzo(texto: 'Ese no era el $color', icono: Icons.cancel_rounded, color: AppColors.rojo, id: id),
       RetroTren.sePaso => MensajeRefuerzo(
