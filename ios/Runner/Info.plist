@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>El micrófono se usa para dictar las palabras en las actividades de fluidez verbal.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>El reconocimiento de voz convierte en texto las palabras que usted dicta en las actividades de fluidez verbal.</string>
 </dict>
 </plist>
