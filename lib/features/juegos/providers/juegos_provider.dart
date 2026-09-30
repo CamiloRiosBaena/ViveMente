@@ -16,6 +16,9 @@ import 'package:vivamente/features/atencion/encuentra_objetivo/encuentra_objetiv
 // Fluidez verbal 1 · Palabras con una letra
 import 'package:vivamente/features/fluidez_verbal/palabras_letra/palabras_letra_game.dart';
 
+// Fluidez verbal 2 · Palabras por categoría
+import 'package:vivamente/features/fluidez_verbal/palabras_categoria/palabras_categoria_game.dart';
+
 /// Nivel elegido para cada juego, por id. Empieza en fácil.
 class DificultadNotifier extends Notifier<Dificultad> {
   DificultadNotifier(this.juegoId);
@@ -44,6 +47,9 @@ final juegosProvider = Provider<List<Game>>((ref) => [
 
       // Fluidez verbal 1 · Palabras con una letra
       PalabrasLetraGame(dificultad: ref.watch(dificultadJuegoProvider(PalabrasLetraGame.idJuego))),
+
+      // Fluidez verbal 2 · Palabras por categoría
+      PalabrasCategoriaGame(dificultad: ref.watch(dificultadJuegoProvider(PalabrasCategoriaGame.idJuego))),
     ]);
 
 final juegosDeDominioProvider = Provider.family<List<Game>, Dominio>(
