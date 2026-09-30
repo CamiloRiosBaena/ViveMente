@@ -16,6 +16,9 @@ import 'package:vivamente/features/atencion/encuentra_objetivo/encuentra_objetiv
 // Memoria 1 · Prepara el desayuno
 import 'package:vivamente/features/memoria/prepara_desayuno/prepara_desayuno_game.dart';
 
+// Memoria 2 · ¿Para qué sirve?
+import 'package:vivamente/features/memoria/para_que_sirve/para_que_sirve_game.dart';
+
 // Fluidez verbal 1 · Palabras con una letra
 import 'package:vivamente/features/fluidez_verbal/palabras_letra/palabras_letra_game.dart';
 
@@ -47,6 +50,9 @@ final juegosProvider = Provider<List<Game>>((ref) => [
 
       // Memoria 1 · Prepara el desayuno
       PreparaDesayunoGame(dificultad: ref.watch(dificultadJuegoProvider(PreparaDesayunoGame.idJuego))),
+
+      // Memoria 2 · ¿Para qué sirve?
+      ParaQueSirveGame(dificultad: ref.watch(dificultadJuegoProvider(ParaQueSirveGame.idJuego))),
 
       // Fluidez verbal 1 · Palabras con una letra
       PalabrasLetraGame(dificultad: ref.watch(dificultadJuegoProvider(PalabrasLetraGame.idJuego))),
