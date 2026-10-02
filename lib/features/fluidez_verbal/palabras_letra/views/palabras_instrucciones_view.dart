@@ -54,7 +54,7 @@ class PalabrasInstruccionesView extends ConsumerWidget {
             const _Nota(
               icono: Icons.mic_none_rounded,
               texto: 'Puede escribirlas y enviarlas, o encender el micrófono y decirlas: '
-                  'lo que diga se guarda solo, sin tocar nada más.',
+                  'lo que diga se va anotando solo. Al terminar se revisan las palabras.',
             ),
             const SizedBox(height: 10),
             const _Nota(

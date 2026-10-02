@@ -60,13 +60,33 @@ class DictadoFalso implements Dictado {
 
   /// Cuántas veces se abrió el micrófono.
   int aperturas = 0;
-  void Function(String texto, bool esFinal)? _alOir;
+
+  /// Con `false`, [detener] no entrega lo último que oyó, como un equipo
+  /// que nunca manda el resultado final.
+  bool entregaFinal = true;
+
+  /// A quién avisar en cada escucha, en orden: la última es la abierta.
+  final _escuchas = <void Function(String texto, bool esFinal)>[];
   VoidCallback? _alTerminar;
 
-  /// Simula que el reconocedor oyó [texto].
-  void oir(String texto, {bool esFinal = true}) => _alOir?.call(texto, esFinal);
+  /// Lo último que oyó la escucha abierta y si ya fue el resultado final.
+  String _ultimo = '';
+  bool _final = true;
 
-  /// Simula que el reconocedor se cerró solo, tras un silencio.
+  /// Simula que el reconocedor oyó [texto] en la escucha abierta.
+  void oir(String texto, {bool esFinal = true}) {
+    if (escuchando) {
+      _ultimo = texto;
+      _final = esFinal;
+    }
+    if (_escuchas.isNotEmpty) _escuchas.last(texto, esFinal);
+  }
+
+  /// Simula que llega tarde algo de la escucha número [escucha] (desde 0).
+  void oirEn(int escucha, String texto, {bool esFinal = true}) => _escuchas[escucha](texto, esFinal);
+
+  /// Simula que el reconocedor se cerró solo, tras un silencio, sin
+  /// entregar el resultado final.
   void cerrarSolo() {
     escuchando = false;
     _alTerminar?.call();
@@ -78,16 +98,21 @@ class DictadoFalso implements Dictado {
   @override
   Future<bool> escuchar({required void Function(String texto, bool esFinal) alOir}) async {
     if (!disponible) return false;
-    _alOir = alOir;
+    _escuchas.add(alOir);
     escuchando = true;
+    _ultimo = '';
+    _final = true;
     aperturas++;
     return true;
   }
 
+  /// Como el reconocedor real: al detenerlo entrega como final lo que oía.
   @override
   Future<void> detener() async {
     if (!escuchando) return;
     escuchando = false;
+    if (!_final && entregaFinal) _escuchas.last(_ultimo, true);
+    _final = true;
     _alTerminar?.call();
   }
 }

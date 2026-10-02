@@ -1,3 +1,4 @@
+import 'package:vivamente/features/fluidez_verbal/comun/transcripcion.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/models/categoria.dart';
 
 /// Qué pasó con una palabra que el adulto dio.
@@ -112,11 +113,21 @@ abstract final class EvaluadorCategoria {
   /// Parte un texto (dictado o escrito) en respuestas. Primero busca frases
   /// de varias palabras que estén en algún diccionario («Santa Marta»,
   /// «oso hormiguero»); lo demás va palabra por palabra, sin las de relleno.
-  static List<String> separar(String texto, Categoria categoria) {
-    final palabras = normalizar(texto).split(' ').where((p) => p.isNotEmpty).toList();
-    final respuestas = <String>[];
+  static List<String> separar(String texto, Categoria categoria) =>
+      [for (final c in cortar(normalizar(texto).split(' '), categoria)) c.texto];
+
+  /// Como [separar], pero sobre las palabras sueltas de un segmento y
+  /// diciendo en cuál empieza cada respuesta. Las respuestas quedan
+  /// normalizadas.
+  static List<Corte> cortar(List<String> palabrasSueltas, Categoria categoria) {
+    final palabras = palabrasSueltas.map(normalizar).toList();
+    final respuestas = <Corte>[];
     var i = 0;
     while (i < palabras.length) {
+      if (palabras[i].isEmpty) {
+        i++;
+        continue;
+      }
       var tomadas = 1;
       for (var n = _maxPalabrasFrase; n > 1; n--) {
         if (i + n > palabras.length) continue;
@@ -128,10 +139,27 @@ abstract final class EvaluadorCategoria {
       }
       final respuesta = palabras.sublist(i, i + tomadas).join(' ');
       final esRelleno = tomadas == 1 && (_relleno.contains(respuesta) || respuesta.length < 2);
-      if (!esRelleno || buscar(respuesta, categoria) != null) respuestas.add(respuesta);
+      if (!esRelleno || buscar(respuesta, categoria) != null) respuestas.add((texto: respuesta, inicio: i));
       i += tomadas;
     }
     return respuestas;
+  }
+
+  /// Evaluación de cada respuesta, en orden. Para saber si una se repite
+  /// cuentan las anteriores que valen (por la evaluación o porque se
+  /// aceptaron), no las descartadas.
+  static List<Evaluacion> evaluarTodas(List<String> respuestas, Categoria categoria, List<Ajuste> ajustes) {
+    final aceptadas = <String>[];
+    final evaluaciones = <Evaluacion>[];
+    for (final (i, r) in respuestas.indexed) {
+      final e = evaluar(r, categoria, aceptadas);
+      evaluaciones.add(e);
+      final ajuste = ajustes[i];
+      if (ajuste == Ajuste.aceptada || (ajuste == Ajuste.ninguno && e.veredicto == Veredicto.valida)) {
+        aceptadas.add(e.palabra);
+      }
+    }
+    return evaluaciones;
   }
 
   /// Veredicto de [respuesta] (ya separada) para [categoria], dadas las

@@ -1,4 +1,5 @@
 import 'package:vivamente/core/models/game.dart';
+import 'package:vivamente/features/fluidez_verbal/comun/transcripcion.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/models/evaluador_categoria.dart';
 
 /// Una palabra válida y cuándo se dio, desde el inicio de la ronda.
@@ -42,6 +43,30 @@ class MetricasCategoria {
 
   final Duration tiempo;
 
+  /// Cifras de las [respuestas] de una ronda con sus [evaluaciones], según
+  /// lo que decidió quien revisó: las aceptadas valen y las descartadas no
+  /// cuentan para nada.
+  factory MetricasCategoria.contar({
+    required int meta,
+    required List<RespuestaOida> respuestas,
+    required List<Evaluacion> evaluaciones,
+    required List<Ajuste> ajustes,
+    required Duration tiempo,
+  }) {
+    var m = MetricasCategoria(meta: meta, tiempo: tiempo);
+    for (final (i, r) in respuestas.indexed) {
+      final e = evaluaciones[i];
+      m = switch (ajustes[i]) {
+        Ajuste.ninguno => m.anotar(e, r.momento, dictada: r.dictada),
+        Ajuste.aceptada => m.anotar((veredicto: Veredicto.valida, palabra: e.palabra, categoria: e.categoria),
+            r.momento,
+            dictada: r.dictada),
+        Ajuste.descartada => m,
+      };
+    }
+    return m;
+  }
+
   int get validas => palabras.length;
   int get errores => repetidas + otraCategoria.length + noReconocidas.length;
 
@@ -68,9 +93,6 @@ class MetricasCategoria {
         Veredicto.otraCategoria => _copiar(otraCategoria: [...otraCategoria, e.palabra]),
         Veredicto.noReconocida => _copiar(noReconocidas: [...noReconocidas, e.palabra]),
       };
-
-  /// Quita una palabra válida que se registró por error (un dictado mal oído).
-  MetricasCategoria quitar(int i) => _copiar(palabras: [...palabras]..removeAt(i));
 
   MetricasCategoria conTiempo(Duration t) => _copiar(tiempo: t);
 

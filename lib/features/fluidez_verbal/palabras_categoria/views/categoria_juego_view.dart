@@ -8,15 +8,14 @@ import 'package:vivamente/core/theme/dominio_estilo.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
 import 'package:vivamente/core/widgets/boton_grande.dart';
 import 'package:vivamente/core/widgets/boton_secundario.dart';
+import 'package:vivamente/features/fluidez_verbal/comun/widgets/oidas_en_vivo.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/models/categoria.dart';
-import 'package:vivamente/features/fluidez_verbal/palabras_categoria/models/evaluador_categoria.dart';
-import 'package:vivamente/features/fluidez_verbal/palabras_categoria/models/metricas_categoria.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/providers/palabras_categoria_provider.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/widgets/ficha_categoria.dart';
-import 'package:vivamente/features/juegos/widgets/refuerzo.dart';
 
 /// Ronda: la categoría arriba, cronómetro y cuenta, el campo para escribir
-/// con el micrófono al lado, y las palabras válidas.
+/// con el micrófono al lado, y lo que lleva dicho, sin evaluar: se revisa
+/// al terminar.
 class CategoriaJuegoView extends ConsumerStatefulWidget {
   const CategoriaJuegoView({super.key, required this.onSalir});
 
@@ -50,10 +49,6 @@ class _CategoriaJuegoViewState extends ConsumerState<CategoriaJuegoView> {
     final m = Bp.margenFlujo(context);
     final tecladoAbierto = MediaQuery.viewInsetsOf(context).bottom > 0;
 
-    ref.listen(
-      palabrasCategoriaProvider.select((s) => s.retroId),
-      (_, _) => vibrarRefuerzo(positivo: ref.read(palabrasCategoriaProvider).retro == Veredicto.valida),
-    );
     ref.listen(palabrasCategoriaProvider.select((s) => s.avisoDictado), (_, _) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -93,8 +88,8 @@ class _CategoriaJuegoViewState extends ConsumerState<CategoriaJuegoView> {
                     Expanded(
                       child: _Dato(
                         etiqueta: 'Palabras',
-                        valor: '${s.metricas.validas}',
-                        icono: Icons.check_circle_outline_rounded,
+                        valor: '${s.oidas.length}',
+                        icono: Icons.edit_note_rounded,
                       ),
                     ),
                   ],
@@ -142,13 +137,12 @@ class _CategoriaJuegoViewState extends ConsumerState<CategoriaJuegoView> {
               if (s.escuchando)
                 Padding(
                   padding: EdgeInsets.fromLTRB(m, 8, m, 0),
-                  child: _Escuchando(parcial: s.parcial),
+                  child: EstadoEscucha(conectado: s.conectado),
                 ),
-              GloboRefuerzo(mensaje: _mensaje(s), alto: 48, tamano: 16),
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: m),
-                  child: _Encontradas(palabras: s.metricas.palabras, onQuitar: notifier.quitar),
+                  child: FichasOidas(palabras: s.oidas),
                 ),
               ),
               // Con el teclado abierto se esconde para dejar sitio a las palabras.
@@ -166,7 +160,6 @@ class _CategoriaJuegoViewState extends ConsumerState<CategoriaJuegoView> {
                 ),
             ],
           ),
-          Positioned.fill(child: DestelloRefuerzo(color: _colorRetro(s.retro), id: s.retroId)),
           if (s.pausado) Positioned.fill(child: _Pausa(onSeguir: notifier.reanudar, onSalir: widget.onSalir)),
         ],
       ),
@@ -181,7 +174,7 @@ class _CategoriaJuegoViewState extends ConsumerState<CategoriaJuegoView> {
         backgroundColor: AppColors.papel,
         title: Text('¿Terminar ahora?', style: AppTheme.titulo(26)),
         content: Text(
-          'Aún le queda tiempo. Si termina, se guardan las palabras que lleva.',
+          'Aún le queda tiempo. Si termina, pasa a revisar las palabras que lleva.',
           style: AppTheme.cuerpo(19, height: 1.4),
         ),
         actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -199,34 +192,6 @@ class _CategoriaJuegoViewState extends ConsumerState<CategoriaJuegoView> {
     );
     if (si ?? false) notifier.terminar();
   }
-
-  static MensajeRefuerzo? _mensaje(PalabrasCategoriaState s) {
-    final p = s.palabraRetro;
-    return switch (s.retro) {
-      Veredicto.valida => MensajeRefuerzo(
-          texto: elogioRefuerzo(s.retroId), icono: Icons.check_circle_rounded, color: AppColors.verde, id: s.retroId),
-      Veredicto.repetida => MensajeRefuerzo(
-          texto: 'Ya la dijo: «$p»', icono: Icons.replay_rounded, color: AppColors.naranja, id: s.retroId),
-      Veredicto.otraCategoria => MensajeRefuerzo(
-          texto: '«$p» es de ${s.categoriaRetro?.nombre.toLowerCase() ?? 'otra categoría'}',
-          icono: Icons.cancel_rounded,
-          color: AppColors.rojo,
-          id: s.retroId),
-      Veredicto.noReconocida => MensajeRefuerzo(
-          texto: 'No reconozco «$p» en ${s.categoria.nombre.toLowerCase()}',
-          icono: Icons.help_outline_rounded,
-          color: AppColors.naranja,
-          id: s.retroId),
-      null => null,
-    };
-  }
-
-  static Color? _colorRetro(Veredicto? v) => switch (v) {
-        Veredicto.valida => AppColors.verde,
-        Veredicto.repetida || Veredicto.noReconocida => AppColors.naranja,
-        Veredicto.otraCategoria => AppColors.rojo,
-        null => null,
-      };
 }
 
 /// «Diga palabras de:» y la categoría con su emoji. En la práctica lo dice.
@@ -370,122 +335,6 @@ class _BotonMicrofono extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      );
-}
-
-/// «Escuchando…» con lo que el dictado va oyendo.
-class _Escuchando extends StatelessWidget {
-  const _Escuchando({required this.parcial});
-
-  final String parcial;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-        liveRegion: true,
-        child: Row(
-          children: [
-            const Icon(Icons.graphic_eq_rounded, color: AppColors.rojo, size: 22),
-            const SizedBox(width: 6),
-            Text('Escuchando', style: AppTheme.cuerpo(17, color: AppColors.rojo, weight: FontWeight.w700)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                parcial.isEmpty ? 'diga sus palabras…' : parcial,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTheme.cuerpo(17, color: AppColors.textoSuave).copyWith(fontStyle: FontStyle.italic),
-              ),
-            ),
-          ],
-        ),
-      );
-}
-
-/// Palabras válidas, desplazables. Al llegar una nueva se baja hasta ella.
-class _Encontradas extends StatefulWidget {
-  const _Encontradas({required this.palabras, required this.onQuitar});
-
-  final List<PalabraDicha> palabras;
-  final ValueChanged<int> onQuitar;
-
-  @override
-  State<_Encontradas> createState() => _EncontradasState();
-}
-
-class _EncontradasState extends State<_Encontradas> {
-  final _scroll = ScrollController();
-
-  @override
-  void didUpdateWidget(_Encontradas antes) {
-    super.didUpdateWidget(antes);
-    if (widget.palabras.length > antes.palabras.length) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scroll.hasClients) {
-          _scroll.animateTo(
-            _scroll.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-          );
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-        controller: _scroll,
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final (i, p) in widget.palabras.indexed)
-              _FichaPalabra(palabra: p.texto, onQuitar: () => widget.onQuitar(i)),
-          ],
-        ),
-      );
-}
-
-/// Palabra válida con una ✕ para quitarla si se registró por error.
-class _FichaPalabra extends StatelessWidget {
-  const _FichaPalabra({required this.palabra, required this.onQuitar});
-
-  final String palabra;
-  final VoidCallback onQuitar;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.only(left: 14),
-        decoration: BoxDecoration(
-          color: AppColors.verdeSuave,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.verde.withValues(alpha: 0.4), width: 2),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(palabra, style: AppTheme.titulo(19, color: AppColors.verdeTexto)),
-            Semantics(
-              button: true,
-              label: 'Quitar $palabra',
-              excludeSemantics: true,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: onQuitar,
-                child: const SizedBox(
-                  width: 40,
-                  height: 42,
-                  child: Icon(Icons.close_rounded, size: 20, color: AppColors.textoTenue),
-                ),
-              ),
-            ),
-          ],
         ),
       );
 }

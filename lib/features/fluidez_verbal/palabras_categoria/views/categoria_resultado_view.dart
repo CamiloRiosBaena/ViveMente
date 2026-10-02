@@ -15,8 +15,8 @@ import 'package:vivamente/features/fluidez_verbal/palabras_categoria/widgets/fic
 import 'package:vivamente/features/juegos/widgets/cabecera_juego.dart';
 
 /// «¡Actividad finalizada!» con las cifras de la ronda, las palabras válidas y
-/// las que no contaron, para que el profesional las revise. El resultado ya
-/// quedó registrado al terminar.
+/// las que no contaron. El resultado ya quedó registrado al confirmar la
+/// revisión.
 class CategoriaResultadoView extends ConsumerWidget {
   const CategoriaResultadoView({super.key, required this.onVolver});
 
@@ -78,7 +78,7 @@ class CategoriaResultadoView extends ConsumerWidget {
             if (m.noReconocidas.isNotEmpty)
               _Lista(
                 titulo: 'No reconocidas',
-                nota: 'No están en el diccionario de la app. Revise si alguna era válida.',
+                nota: 'No están en el diccionario de la app y no se aceptaron al revisar.',
                 palabras: m.noReconocidas,
                 fondo: AppColors.naranjaSuave,
                 borde: AppColors.naranja.withValues(alpha: 0.4),

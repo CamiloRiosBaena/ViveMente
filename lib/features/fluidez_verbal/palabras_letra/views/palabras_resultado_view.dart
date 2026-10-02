@@ -13,7 +13,7 @@ import 'package:vivamente/features/fluidez_verbal/palabras_letra/widgets/ficha_l
 import 'package:vivamente/features/juegos/widgets/cabecera_juego.dart';
 
 /// «¡Actividad finalizada!» con las cifras de la ronda y las palabras dichas.
-/// El resultado ya quedó registrado al terminar.
+/// El resultado ya quedó registrado al confirmar la revisión.
 class PalabrasResultadoView extends ConsumerWidget {
   const PalabrasResultadoView({super.key, required this.onVolver});
 

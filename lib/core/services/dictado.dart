@@ -76,7 +76,11 @@ class DictadoVoz implements Dictado {
       // listen() termine.
       _escuchando = true;
       await _stt.listen(
-        onResult: (r) => alOir(r.recognizedWords, r.finalResult),
+        onResult: (r) {
+          // Cada equipo entrega distinto; en depuración se ve qué llega.
+          if (kDebugMode) debugPrint('dictado${r.finalResult ? ' (final)' : ''}: «${r.recognizedWords}»');
+          alOir(r.recognizedWords, r.finalResult);
+        },
         listenOptions: SpeechListenOptions(
           localeId: _idioma,
           listenMode: ListenMode.dictation,

@@ -1,4 +1,5 @@
 import 'package:vivamente/core/models/game.dart';
+import 'package:vivamente/features/fluidez_verbal/comun/transcripcion.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_letra/models/evaluador_palabras.dart';
 
 /// Una palabra válida y cuándo se dio, desde el inicio de la ronda.
@@ -40,6 +41,28 @@ class MetricasPalabras {
 
   final Duration tiempo;
 
+  /// Cifras de las [respuestas] de una ronda con sus [veredictos], según lo
+  /// que decidió quien revisó: las aceptadas valen y las descartadas no
+  /// cuentan para nada.
+  factory MetricasPalabras.contar({
+    required int meta,
+    required List<RespuestaOida> respuestas,
+    required List<Veredicto> veredictos,
+    required List<Ajuste> ajustes,
+    required Duration tiempo,
+  }) {
+    var m = MetricasPalabras(meta: meta, tiempo: tiempo);
+    for (final (i, r) in respuestas.indexed) {
+      final dicha = PalabraDicha(r.texto, r.momento, dictada: r.dictada);
+      m = switch (ajustes[i]) {
+        Ajuste.ninguno => m.anotar(veredictos[i], dicha),
+        Ajuste.aceptada => m.anotar(Veredicto.valida, dicha),
+        Ajuste.descartada => m,
+      };
+    }
+    return m;
+  }
+
   int get validas => palabras.length;
   int get errores => repetidas + otraLetra + noValidas;
 
@@ -66,9 +89,6 @@ class MetricasPalabras {
         Veredicto.otraLetra => _copiar(otraLetra: otraLetra + 1),
         Veredicto.noEsPalabra => _copiar(noValidas: noValidas + 1),
       };
-
-  /// Quita una palabra válida que se registró por error (un dictado mal oído).
-  MetricasPalabras quitar(int i) => _copiar(palabras: [...palabras]..removeAt(i));
 
   MetricasPalabras conTiempo(Duration t) => _copiar(tiempo: t);
 

@@ -6,10 +6,12 @@ import 'package:vivamente/core/widgets/boton_grande.dart';
 import 'package:vivamente/core/widgets/boton_secundario.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/palabras_categoria_game.dart';
+import 'package:vivamente/features/fluidez_verbal/comun/widgets/revision_respuestas.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/providers/palabras_categoria_provider.dart';
+import 'package:vivamente/features/fluidez_verbal/palabras_categoria/views/categoria_revision_view.dart';
 import 'package:vivamente/features/juegos/widgets/cabecera_juego.dart';
 
-/// Cómo le fue en la práctica y paso a la ronda medida.
+/// Cómo le fue en la práctica, palabra por palabra, y paso a la ronda medida.
 class CategoriaFinPracticaView extends ConsumerWidget {
   const CategoriaFinPracticaView({super.key});
 
@@ -49,9 +51,13 @@ class CategoriaFinPracticaView extends ConsumerWidget {
                 style: AppTheme.cuerpo(20, height: 1.4),
               ),
             ],
+            if (s.respuestas.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              ListaRevision(items: itemsRevision(s)),
+            ],
             const SizedBox(height: 16),
             Text(
-              'Ahora empieza el nivel ${s.nivel.dificultad.nivel}: verá la categoría y tendrá 60 segundos.',
+              'Al terminar la ronda podrá revisar las palabras. Ahora empieza el nivel ${s.nivel.dificultad.nivel}: verá la categoría y tendrá 60 segundos.',
               style: AppTheme.cuerpo(20, height: 1.4),
             ),
             const Spacer(),

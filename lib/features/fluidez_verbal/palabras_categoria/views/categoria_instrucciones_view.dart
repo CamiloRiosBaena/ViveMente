@@ -55,12 +55,12 @@ class CategoriaInstruccionesView extends ConsumerWidget {
             const _Nota(
               icono: Icons.mic_none_rounded,
               texto: 'Puede escribirlas y enviarlas, o encender el micrófono y decirlas: '
-                  'lo que diga se guarda solo, sin tocar nada más.',
+                  'lo que diga se va anotando solo. Al terminar se revisan las palabras.',
             ),
             const SizedBox(height: 10),
             const _Nota(
               icono: Icons.info_outline_rounded,
-              texto: 'Cada palabra se revisa sola: no valen las repetidas ni las de otra categoría.',
+              texto: 'No valen las palabras repetidas ni las de otra categoría.',
             ),
             const SizedBox(height: 22),
             const SelectorDificultad(juegoId: PalabrasCategoriaGame.idJuego),

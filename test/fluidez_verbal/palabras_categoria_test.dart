@@ -6,6 +6,7 @@ import 'package:vivamente/core/models/game.dart';
 import 'package:vivamente/core/services/dictado.dart';
 import 'package:vivamente/core/services/reloj.dart';
 import 'package:vivamente/core/services/voz.dart';
+import 'package:vivamente/features/fluidez_verbal/comun/transcripcion.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/models/categoria.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/models/evaluador_categoria.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/models/metricas_categoria.dart';
@@ -72,6 +73,21 @@ void main() {
       expect(EvaluadorCategoria.separar('eh bueno una estrella de mar', Categoria.animales), ['estrella de mar']);
     });
 
+    test('al cortar dice dónde empieza cada respuesta', () {
+      expect(EvaluadorCategoria.cortar(['eh', 'el', 'oso', 'hormiguero', 'y', 'gato'], Categoria.animales),
+          [(texto: 'oso hormiguero', inicio: 2), (texto: 'gato', inicio: 5)]);
+    });
+
+    test('evalúa la ronda en orden: lo descartado no hace repetir y lo aceptado sí', () {
+      const n = Ajuste.ninguno;
+      List<Veredicto> evaluar(List<String> r, List<Ajuste> a) =>
+          EvaluadorCategoria.evaluarTodas(r, Categoria.animales, a).map((e) => e.veredicto).toList();
+      expect(evaluar(['perro', 'perros'], [n, n]), [Veredicto.valida, Veredicto.repetida]);
+      expect(evaluar(['perro', 'perros'], [Ajuste.descartada, n]), [Veredicto.valida, Veredicto.valida]);
+      // Una aceptada cuenta para las repeticiones de las siguientes.
+      expect(evaluar(['perro', 'perro'], [Ajuste.aceptada, n]), [Veredicto.valida, Veredicto.repetida]);
+    });
+
     test('ninguna categoría tiene palabras repetidas', () {
       for (final c in Categoria.values) {
         final normalizadas = c.palabras.map(EvaluadorCategoria.normalizar).toList();
@@ -117,6 +133,22 @@ void main() {
     expect(r.aciertos, 2);
     expect(r.errores, 3);
     expect(r.puntajeMaximo, 10);
+  });
+
+  test('MetricasCategoria cuenta según lo revisado', () {
+    const t = Duration(seconds: 1);
+    const n = Ajuste.ninguno;
+    final respuestas = ['perro', 'xyzw', 'silla'];
+    final ajustes = [n, Ajuste.aceptada, Ajuste.descartada];
+    final m = MetricasCategoria.contar(
+      meta: 10,
+      respuestas: [for (final r in respuestas) RespuestaOida(r, t)],
+      evaluaciones: EvaluadorCategoria.evaluarTodas(respuestas, Categoria.animales, ajustes),
+      ajustes: ajustes,
+      tiempo: const Duration(seconds: 60),
+    );
+    expect(m.palabras.map((p) => p.texto), ['perro', 'xyzw']);
+    expect(m.errores, 0);
   });
 
   group('PalabrasCategoriaNotifier', () {
@@ -167,7 +199,7 @@ void main() {
       avanzar(PalabrasCategoriaNotifier.presentacion.inMilliseconds);
     }
 
-    test('la práctica es con colores, dura 20 segundos y no se registra', () async {
+    test('la práctica es con colores, dura 20 segundos, muestra cada palabra y no se registra', () async {
       juego().empezarPractica();
       await Future<void>.delayed(Duration.zero);
       expect(estado().fase, FaseCategoria.presentacion);
@@ -178,9 +210,11 @@ void main() {
       expect(estado().fase, FaseCategoria.jugando);
       expect(estado().textoTiempo, '00:20');
       juego().anadir('rojo');
+      juego().anadir('perro');
       avanzar(20000);
       expect(estado().fase, FaseCategoria.finPractica);
       expect(estado().metricas.validas, 1);
+      expect(estado().evaluaciones.map((e) => e.veredicto), [Veredicto.valida, Veredicto.otraCategoria]);
       expect(c.read(nivelesHechosProvider(_id)), isEmpty);
     });
 
@@ -189,68 +223,102 @@ void main() {
       expect(estado().fase, FaseCategoria.instrucciones);
     });
 
-    test('la ronda medida usa una categoría del nivel y dura 60 segundos', () {
-      empezar();
+    test('la ronda medida usa una categoría del nivel, dura 60 segundos y empieza vacía', () {
+      practicar();
+      juego().anadir('rojo');
+      avanzar(20000);
+      juego().empezarPrueba();
+      avanzar(3000);
       expect(estado().practica, isFalse);
       expect(NivelCategoria.de(Dificultad.facil).categorias, contains(estado().categoria));
       expect(estado().textoTiempo, '01:00');
+      expect(estado().oidas, isEmpty);
     });
 
-    test('escribir registra y da el refuerzo según el veredicto', () {
+    test('durante la ronda solo se anota; al terminar se evalúa todo', () async {
       empezar();
       expect(juego().anadir('   '), isFalse);
       expect(juego().anadir(' ${palabra(0)} '), isTrue);
-      expect(estado().metricas.palabras.single.texto, palabra(0));
-      expect(estado().retro, Veredicto.valida);
-
       juego().anadir(palabra(0));
-      expect(estado().metricas.repetidas, 1);
-      expect(estado().retro, Veredicto.repetida);
-
       juego().anadir('silla');
-      expect(estado().retro, Veredicto.otraCategoria);
-      expect(estado().categoriaRetro, Categoria.hogar);
-
       juego().anadir('qwerty');
-      expect(estado().retro, Veredicto.noReconocida);
-      expect(estado().metricas.noReconocidas, ['qwerty']);
+      expect(estado().oidas, [palabra(0), palabra(0), 'silla', 'qwerty']);
+      expect(estado().metricas.validas, 0);
 
-      avanzar(1700);
-      expect(estado().retro, isNull);
+      await juego().terminar();
+      expect(estado().fase, FaseCategoria.revision);
+      expect(estado().evaluaciones.map((e) => e.veredicto),
+          [Veredicto.valida, Veredicto.repetida, Veredicto.otraCategoria, Veredicto.noReconocida]);
+      expect(estado().evaluaciones[2].categoria, Categoria.hogar);
+      expect(estado().metricas.noReconocidas, ['qwerty']);
+      expect(c.read(nivelesHechosProvider(_id)), isEmpty);
     });
 
     test('se pueden escribir varias palabras de una vez', () {
       empezar();
       juego().anadir('${palabra(0)} y ${palabra(1)}');
-      expect(estado().metricas.palabras.map((p) => p.texto), [palabra(0), palabra(1)]);
+      expect(estado().oidas, [palabra(0), palabra(1)]);
     });
 
-    test('el dictado muestra lo que oye y se guarda solo', () async {
+    test('el dictado se muestra al instante y cuenta la versión corregida', () async {
+      empezar();
+      // Con la semilla del sorteo, la ronda es de animales.
+      expect(estado().categoria, Categoria.animales);
+      await juego().alternarMicrofono();
+      dictado.oir('oso', esFinal: false);
+      expect(estado().oidas, ['oso']);
+
+      // Con la pausa a mitad de la frase, el reconocedor la completa después.
+      dictado.oir('oso hormiguero', esFinal: false);
+      expect(estado().oidas, ['oso hormiguero']);
+      dictado.oir('oso hormiguero y perros');
+      expect(estado().oidas, ['oso hormiguero', 'perro']);
+
+      await juego().terminar();
+      expect(estado().metricas.palabras.map((p) => p.texto), ['oso hormiguero', 'perro']);
+      expect(estado().metricas.palabras.every((p) => p.dictada), isTrue);
+    });
+
+    test('lo que llega tarde de una escucha anterior no se cuenta dos veces', () async {
       empezar();
       await juego().alternarMicrofono();
       dictado.oir(palabra(0), esFinal: false);
-      expect(estado().parcial, palabra(0));
-      expect(estado().metricas.validas, 0);
-
-      avanzar(1000);
-      expect(estado().metricas.palabras.map((p) => p.texto), [palabra(0)]);
-      expect(estado().metricas.palabras.single.dictada, isTrue);
-
-      dictado.oir('${palabra(0)} ${palabra(2)}');
+      dictado.cerrarSolo();
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      dictado.oir(palabra(2));
+      dictado.oirEn(0, palabra(0));
+      expect(estado().oidas, [palabra(0), palabra(2)]);
+      await juego().terminar();
       expect(estado().metricas.validas, 2);
       expect(estado().metricas.repetidas, 0);
     });
 
-    test('termina a los 60 segundos, registra solo ese nivel y conserva el resultado', () {
+    test('termina a los 60 segundos con lo último que oyó y se registra al confirmar', () async {
       empezar();
       juego().anadir(palabra(0));
+      await juego().alternarMicrofono();
+      dictado.oir('qwerty', esFinal: false);
       avanzar(60000);
-      expect(estado().fase, FaseCategoria.resultado);
+      await pumpEventQueue();
+      expect(estado().fase, FaseCategoria.revision);
       expect(estado().metricas.tiempo, NivelCategoria.duracion);
-      expect(estado().resultado!.aciertos, 1);
+
+      // La app no conocía la palabra; quien revisa la acepta.
+      juego().ajustar(1, Ajuste.aceptada);
+      expect(estado().metricas.validas, 2);
+      juego().confirmar();
+      expect(estado().fase, FaseCategoria.resultado);
+      expect(estado().resultado!.aciertos, 2);
       expect(c.read(nivelesHechosProvider(_id)), {Dificultad.facil});
       expect(c.read(dificultadJuegoProvider(_id)), Dificultad.medio);
       expect(estado().fase, FaseCategoria.resultado);
+    });
+
+    test('sin palabras va directo al resultado', () async {
+      empezar();
+      await juego().terminar();
+      expect(estado().fase, FaseCategoria.resultado);
+      expect(c.read(nivelesHechosProvider(_id)), {Dificultad.facil});
     });
 
     test('en pausa el tiempo no corre ni se puede escribir', () {
@@ -259,6 +327,7 @@ void main() {
       juego().pausar();
       avanzar(20000);
       expect(juego().anadir(palabra(0)), isFalse);
+      expect(estado().oidas, isEmpty);
       juego().reanudar();
       avanzar(1000);
       expect(estado().textoTiempo, '00:54');
@@ -276,9 +345,11 @@ void main() {
       expect(estado().fase, FaseCategoria.instrucciones);
     });
 
-    test('repetir vuelve a las instrucciones del mismo nivel', () {
+    test('repetir vuelve a las instrucciones del mismo nivel', () async {
       empezar();
-      avanzar(60000);
+      juego().anadir(palabra(0));
+      await juego().terminar();
+      juego().confirmar();
       juego().repetir();
       expect(estado().fase, FaseCategoria.instrucciones);
       expect(c.read(dificultadJuegoProvider(_id)), Dificultad.facil);

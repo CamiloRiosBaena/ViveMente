@@ -6,10 +6,11 @@ import 'package:vivamente/features/fluidez_verbal/palabras_categoria/views/categ
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/views/categoria_juego_view.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/views/categoria_presentacion_view.dart';
 import 'package:vivamente/features/fluidez_verbal/palabras_categoria/views/categoria_resultado_view.dart';
+import 'package:vivamente/features/fluidez_verbal/palabras_categoria/views/categoria_revision_view.dart';
 
 /// Pantallas de «Palabras por categoría» según la fase del provider:
 /// instrucciones → práctica (categoría en grande y ronda) → fin de práctica
-/// → categoría en grande → ronda → resultado.
+/// → categoría en grande → ronda → revisión → resultado.
 class PalabrasCategoriaFlujo extends ConsumerStatefulWidget {
   const PalabrasCategoriaFlujo({super.key, required this.onBack});
 
@@ -41,7 +42,8 @@ class _PalabrasCategoriaFlujoState extends ConsumerState<PalabrasCategoriaFlujo>
 
     return PopScope(
       // En plena ronda, «atrás» del sistema pausa en vez de salir; durante
-      // los segundos de la categoría en grande no hace nada.
+      // los segundos de la categoría en grande o en la revisión no hace
+      // nada, para no perder la ronda.
       canPop: fase == FaseCategoria.instrucciones ||
           fase == FaseCategoria.finPractica ||
           fase == FaseCategoria.resultado,
@@ -53,6 +55,7 @@ class _PalabrasCategoriaFlujoState extends ConsumerState<PalabrasCategoriaFlujo>
         FaseCategoria.presentacion => const CategoriaPresentacionView(),
         FaseCategoria.jugando => CategoriaJuegoView(onSalir: widget.onBack),
         FaseCategoria.finPractica => const CategoriaFinPracticaView(),
+        FaseCategoria.revision => const CategoriaRevisionView(),
         FaseCategoria.resultado => CategoriaResultadoView(onVolver: widget.onBack),
       },
     );

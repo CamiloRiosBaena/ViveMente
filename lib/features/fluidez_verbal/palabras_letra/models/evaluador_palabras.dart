@@ -1,3 +1,5 @@
+import 'package:vivamente/features/fluidez_verbal/comun/transcripcion.dart';
+
 /// Qué pasó con una palabra que el adulto dio.
 enum Veredicto {
   /// Empieza con la letra y es nueva: cuenta.
@@ -27,9 +29,38 @@ abstract final class EvaluadorPalabras {
   static String normalizar(String palabra) =>
       palabra.trim().toLowerCase().split('').map((c) => _sinTilde[c] ?? c).join();
 
+  /// Palabras sueltas que se dicen entre respuestas y no son respuestas.
+  static const _relleno = {
+    'el', 'la', 'lo', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'del', 'al', 'en', 'con', 'que', //
+    'pues', 'bueno', 'eh', 'em', 'mm', 'mmm', 'ah', 'ay',
+  };
+
   /// Parte un texto dictado («mesa, mano y mapa») en palabras sueltas.
   static List<String> separar(String texto) =>
       texto.split(_separador).where((p) => p.isNotEmpty).map((p) => p.toLowerCase()).toList();
+
+  /// Cada palabra es una respuesta. En el dictado se quitan las de una letra
+  /// («y», «a») y las de relleno («la», «eh»): son conectores, no respuestas.
+  /// Escritas se evalúan todas.
+  static List<Corte> cortar(List<String> palabras, {required bool dictado}) => [
+        for (final (i, p) in palabras.indexed)
+          if (!dictado || (p.length > 1 && !_relleno.contains(normalizar(p)))) (texto: p, inicio: i),
+      ];
+
+  /// Veredicto de cada respuesta, en orden. Para saber si una se repite
+  /// cuentan las anteriores que valen (por la evaluación o porque se
+  /// aceptaron), no las descartadas.
+  static List<Veredicto> evaluarTodas(List<String> respuestas, String letra, List<Ajuste> ajustes) {
+    final aceptadas = <String>[];
+    final veredictos = <Veredicto>[];
+    for (final (i, r) in respuestas.indexed) {
+      final v = evaluar(r, letra, aceptadas);
+      veredictos.add(v);
+      final ajuste = ajustes[i];
+      if (ajuste == Ajuste.aceptada || (ajuste == Ajuste.ninguno && v == Veredicto.valida)) aceptadas.add(r);
+    }
+    return veredictos;
+  }
 
   /// Veredicto de [palabra] para [letra], dadas las ya [aceptadas].
   static Veredicto evaluar(String palabra, String letra, Iterable<String> aceptadas) {
