@@ -9,6 +9,7 @@ import 'package:vivamente/core/theme/dominio_estilo.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
 import 'package:vivamente/core/widgets/boton_grande.dart';
 import 'package:vivamente/core/widgets/boton_secundario.dart';
+import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/models/estimulo.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/providers/encuentra_objetivo_provider.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/widgets/ficha_estimulo.dart';
@@ -173,13 +174,11 @@ class _Dato extends StatelessWidget {
     return Semantics(
       label: '$etiqueta: $valor',
       excludeSemantics: true,
-      child: Container(
+      child: Glass(
+        radio: 16,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: alerta ? AppColors.rojo : AppColors.borde, width: 2),
-        ),
+        opacidad: 0.6,
+        tinte: Colors.white,
         child: Row(
           children: [
             Icon(icono, color: alerta ? AppColors.rojo : AppColors.textoSuave, size: 26),
@@ -336,25 +335,26 @@ class _Pausa extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440),
-            child: Container(
-              margin: const EdgeInsets.all(24),
+            child: Padding(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.papel,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Semantics(header: true, child: Text('En pausa', style: AppTheme.titulo(30))),
-                  const SizedBox(height: 8),
-                  Text('El tiempo está detenido. Siga cuando esté listo.', style: AppTheme.cuerpo(19, height: 1.4)),
-                  const SizedBox(height: 22),
-                  BotonGrande(texto: 'Seguir', onPressed: onSeguir),
-                  const SizedBox(height: 12),
-                  BotonSecundario(texto: 'Salir de la actividad', onPressed: onSalir),
-                ],
+              child: Glass(
+                radio: 24,
+                padding: const EdgeInsets.all(24),
+                opacidad: 0.85,
+                tinte: AppColors.papel,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Semantics(header: true, child: Text('En pausa', style: AppTheme.titulo(30))),
+                    const SizedBox(height: 8),
+                    Text('El tiempo está detenido. Siga cuando esté listo.', style: AppTheme.cuerpo(19, height: 1.4)),
+                    const SizedBox(height: 22),
+                    BotonGrande(texto: 'Seguir', onPressed: onSeguir),
+                    const SizedBox(height: 12),
+                    BotonSecundario(texto: 'Salir de la actividad', onPressed: onSalir),
+                  ],
+                ),
               ),
             ),
           ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:vivamente/core/constants/app_colors.dart';
 import 'package:vivamente/core/theme/app_theme.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
+import 'package:vivamente/core/widgets/fondo_glass.dart';
+import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
 
 /// Esqueleto de los tres pasos de registro (evaluador, cédula, datos): sin
@@ -39,66 +41,96 @@ class PantallaRegistro extends StatelessWidget {
     final m = Bp.margenFlujo(context);
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(m, 16, m, 16),
-                child: CuerpoElastico(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (onAtras != null) _BarraPaso(paso: paso, onAtras: onAtras!),
-                      // El bloque queda centrado entre la barra de paso y el
-                      // botón: el aire sobrante se reparte parejo arriba y
-                      // abajo en vez de acumularse en un hueco.
-                      const Spacer(),
-                      const SizedBox(height: 20),
-                      if (icono != null) ...[
-                        Container(
-                          width: 76,
-                          height: 76,
-                          decoration: BoxDecoration(
-                            color: AppColors.naranjaSuave,
-                            borderRadius: BorderRadius.circular(22),
+      backgroundColor: AppColors.papel,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const FondoPremium(),
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(m, 16, m, 16),
+                    child: CuerpoElastico(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (onAtras != null)
+                            _BarraPaso(paso: paso, onAtras: onAtras!),
+                          const Spacer(),
+                          const SizedBox(height: 20),
+                          if (icono != null) ...[
+                            Container(
+                              width: 76,
+                              height: 76,
+                              decoration: BoxDecoration(
+                                color: AppColors.naranjaSuave,
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              child: Icon(
+                                icono,
+                                size: 42,
+                                color: AppColors.textoSuave,
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                          ],
+                          Semantics(
+                            header: true,
+                            child: Text(
+                              titulo,
+                              style: AppTheme.titulo(34, height: 1.15),
+                            ),
                           ),
-                          child: Icon(icono, size: 42, color: AppColors.textoSuave),
-                        ),
-                        const SizedBox(height: 22),
-                      ],
-                      Semantics(header: true, child: Text(titulo, style: AppTheme.titulo(34, height: 1.15))),
-                      if (subtitulo != null) ...[
-                        const SizedBox(height: 12),
-                        Text(subtitulo!, style: AppTheme.cuerpo(20, height: 1.45)),
-                      ],
-                      const SizedBox(height: 28),
-                      cuerpo,
-                      const SizedBox(height: 20),
-                      const Spacer(),
-                    ],
+                          if (subtitulo != null) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              subtitulo!,
+                              style: AppTheme.cuerpo(20, height: 1.45),
+                            ),
+                          ],
+                          const SizedBox(height: 28),
+                          cuerpo,
+                          const SizedBox(height: 20),
+                          const Spacer(),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(m, 0, m, 14),
-              child: Column(
-                children: [
-                  boton,
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      _Puntos(paso: paso),
-                      const Spacer(),
-                      Image.asset('assets/Logo_unad_color.png', height: 36, semanticLabel: 'UNAD'),
-                    ],
+                Padding(
+                  padding: EdgeInsets.fromLTRB(m, 0, m, 12),
+                  child: Glass(
+                    radio: 24,
+                    padding: const EdgeInsets.all(12),
+                    opacidad: 0.72,
+                    blur: 20,
+                    tinte: Colors.white,
+                    borde: AppColors.borde.withValues(alpha: 0.52),
+                    child: Column(
+                      children: [
+                        boton,
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _Puntos(paso: paso),
+                            const Spacer(),
+                            Image.asset(
+                              'assets/Logo_unad_color.png',
+                              height: 36,
+                              semanticLabel: 'UNAD',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

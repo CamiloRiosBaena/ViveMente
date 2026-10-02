@@ -38,7 +38,7 @@ abstract final class AppTheme {
       );
 
   static OutlineInputBorder _borde(Color color, double ancho) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: color, width: ancho),
       );
 
@@ -83,24 +83,32 @@ abstract final class AppTheme {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.azul.withValues(alpha: 0.35),
           disabledForegroundColor: Colors.white,
-          textStyle: GoogleFonts.nunito(fontSize: 24, fontWeight: FontWeight.w700),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          textStyle: GoogleFonts.nunito(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.white.withValues(alpha: 0.76),
         hoverColor: Colors.transparent,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 26),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 20,
+        ),
         labelStyle: cuerpo(19),
         floatingLabelStyle: cuerpo(18, color: AppColors.naranja, weight: FontWeight.w600),
         errorStyle: cuerpo(16, color: AppColors.rojo),
-        border: _borde(AppColors.borde, 2),
-        enabledBorder: _borde(AppColors.borde, 2),
-        disabledBorder: _borde(AppColors.borde, 2),
-        focusedBorder: _borde(AppColors.naranja, 2.5),
-        errorBorder: _borde(AppColors.rojo, 2),
-        focusedErrorBorder: _borde(AppColors.rojo, 3),
+        border: _borde(AppColors.borde, 1),
+        enabledBorder: _borde(AppColors.borde, 1),
+        disabledBorder: _borde(AppColors.borde, 1),
+        focusedBorder: _borde(AppColors.naranja, 2),
+        errorBorder: _borde(AppColors.rojo, 1),
+        focusedErrorBorder: _borde(AppColors.rojo, 2),
       ),
     );
   }

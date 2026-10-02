@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,12 +8,13 @@ import 'package:vivamente/core/theme/app_theme.dart';
 import 'package:vivamente/core/theme/dominio_estilo.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
 import 'package:vivamente/core/widgets/cabecera_marca.dart';
+import 'package:vivamente/core/widgets/fondo_glass.dart';
 
+import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/features/juegos/providers/juegos_provider.dart';
 import 'package:vivamente/features/juegos/providers/resultados_provider.dart';
 import 'package:vivamente/features/session/providers/sesion_provider.dart';
 import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
-
 
 class InicioView extends ConsumerWidget {
   const InicioView({super.key});
@@ -59,10 +58,7 @@ class _InicioState extends ConsumerState<_Inicio> {
             'Cerrar sesión',
             style: AppTheme.cuerpo(19, color: AppColors.texto),
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 8,
-          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           onTap: () => Navigator.of(context).pop(true),
         ),
       ),
@@ -80,23 +76,16 @@ class _InicioState extends ConsumerState<_Inicio> {
     final adulto = ref.watch(sesionProvider).adulto!;
     final progreso = ref.watch(progresoProvider);
 
-    final total = Dominio.values.fold<int>(
-      0,
-      (s, d) => s + d.cantidadActividades,
-    );
-
-    final hechas = progreso.values.fold<int>(
-      0,
-      (s, n) => s + n,
-    );
+    final total = Dominio.values.fold<int>(0, (s, d) => s + d.cantidadActividades);
+    final hechas = progreso.values.fold<int>(0, (s, n) => s + n);
 
     final m = Bp.margenFlujo(context);
-
     final dominios = Dominio.values.toList();
 
     return Scaffold(
       body: Stack(
         children: [
+          const Positioned.fill(child: FondoPremium()),
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -104,26 +93,15 @@ class _InicioState extends ConsumerState<_Inicio> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Saludo(
-                      saludo: _saludo,
-                      adulto: adulto,
-                    ),
-                    const SizedBox(height: 16),
-                    _TarjetaProgreso(
-                      hechas: hechas,
-                      total: total,
-                    ),
+                    _Saludo(saludo: _saludo, adulto: adulto),
+                    const SizedBox(height: 20),
+                    _TarjetaProgreso(hechas: hechas, total: total),
                   ],
                 ),
               ),
               Expanded(
                 child: ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    m,
-                    22,
-                    m,
-                    130,
-                  ),
+                  padding: EdgeInsets.fromLTRB(m, 28, m, 136),
                   children: [
                     Semantics(
                       header: true,
@@ -132,12 +110,10 @@ class _InicioState extends ConsumerState<_Inicio> {
                         style: AppTheme.titulo(24),
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
                     if (dominios.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 30,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 32),
                         child: Center(
                           child: Text(
                             'No hay dominios disponibles.',
@@ -150,17 +126,13 @@ class _InicioState extends ConsumerState<_Inicio> {
                         _TarjetaDominio(
                           dominio: d,
                           hechas: progreso[d] ?? 0,
-                          onTap: ref
-                                  .watch(juegosDeDominioProvider(d))
-                                  .isEmpty
+                          onTap: ref.watch(juegosDeDominioProvider(d)).isEmpty
                               ? () => _aviso(
                                     'Las actividades de ${d.etiqueta} aún no están disponibles.',
                                   )
-                              : () => context.push(
-                                    '/dominio/${d.name}',
-                                  ),
+                              : () => context.push('/dominio/${d.name}'),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                       ],
                   ],
                 ),
@@ -172,9 +144,7 @@ class _InicioState extends ConsumerState<_Inicio> {
             right: 0,
             bottom: 0,
             child: _BarraInferior(
-              onProgreso: () => _aviso(
-                'El progreso estará disponible pronto.',
-              ),
+              onProgreso: () => _aviso('El progreso estará disponible pronto.'),
               onAjustes: _ajustes,
             ),
           ),
@@ -184,60 +154,8 @@ class _InicioState extends ConsumerState<_Inicio> {
   }
 }
 
-class _Glass extends StatelessWidget {
-  const _Glass({
-    required this.child,
-    this.radio = 18,
-    this.padding = const EdgeInsets.all(16),
-    this.opacidad = 0.55,
-    this.blur = 16,
-    this.tinte,
-  });
-
-  final Widget child;
-  final double radio;
-  final EdgeInsets padding;
-  final double opacidad;
-  final double blur;
-  final Color? tinte;
-
-  @override
-  Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(radio),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: blur,
-            sigmaY: blur,
-          ),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: (tinte ?? Colors.white).withValues(
-                alpha: opacidad,
-              ),
-              borderRadius: BorderRadius.circular(radio),
-              border: Border.all(
-                color: AppColors.borde.withValues(alpha: 0.5),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: child,
-          ),
-        ),
-      );
-}
-
 class _Saludo extends StatelessWidget {
-  const _Saludo({
-    required this.saludo,
-    required this.adulto,
-  });
+  const _Saludo({required this.saludo, required this.adulto});
 
   final String saludo;
   final Adulto adulto;
@@ -256,34 +174,30 @@ class _Saludo extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
+                const SizedBox(height: 2),
                 Semantics(
                   header: true,
                   child: Text(
                     adulto.primerNombre,
-                    style: AppTheme.titulo(
-                      32,
-                      color: Colors.white,
-                      height: 1.15,
-                    ),
+                    style: AppTheme.titulo(32, color: Colors.white, height: 1.15),
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 16),
           Container(
-            width: 52,
-            height: 52,
+            width: 56,
+            height: 56,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withValues(alpha: 0.18),
               shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
             ),
             child: Text(
               adulto.iniciales,
-              style: AppTheme.titulo(
-                18,
-                color: Colors.white,
-              ),
+              style: AppTheme.titulo(19, color: Colors.white),
             ),
           ),
         ],
@@ -291,10 +205,7 @@ class _Saludo extends StatelessWidget {
 }
 
 class _TarjetaProgreso extends StatelessWidget {
-  const _TarjetaProgreso({
-    required this.hechas,
-    required this.total,
-  });
+  const _TarjetaProgreso({required this.hechas, required this.total});
 
   final int hechas;
   final int total;
@@ -304,45 +215,45 @@ class _TarjetaProgreso extends StatelessWidget {
     final valor = total == 0 ? 0.0 : hechas / total;
     final porcentaje = (valor * 100).round();
 
-    return _Glass(
-      radio: 18,
-      opacidad: 0.14,
-      tinte: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-          'Avance en la valoración',
-            style: AppTheme.cuerpo(
-              16,
-              color: Colors.white.withValues(alpha: 0.85),
+    return Semantics(
+      label: 'Tu avance en la valoración: $porcentaje por ciento completado',
+      excludeSemantics: true,
+      child: Glass(
+        radio: 20,
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+        opacidad: 0.16,
+        tinte: Colors.white,
+        borde: Colors.white.withValues(alpha: 0.30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tu avance en la valoración',
+              style: AppTheme.cuerpo(
+                16,
+                color: Colors.white.withValues(alpha: 0.85),
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Semantics(
-            label: '$porcentaje por ciento completado',
-            excludeSemantics: true,
-            child: Row(
+            const SizedBox(height: 12),
+            Row(
               children: [
                 Expanded(
                   child: _Barra(
                     valor: valor,
                     color: AppColors.ambar,
                     fondo: Colors.white24,
+                    alto: 10,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 Text(
                   '$porcentaje %',
-                  style: AppTheme.titulo(
-                    17,
-                    color: Colors.white,
-                  ),
+                  style: AppTheme.titulo(20, color: Colors.white),
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -387,64 +298,74 @@ class _TarjetaDominio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final n = dominio.cantidadActividades;
-    final detalle =
-        '$n actividades · $hechas ${hechas == 1 ? 'hecha' : 'hechas'}';
+    final detalle = '$n actividades · $hechas ${hechas == 1 ? 'hecha' : 'hechas'}';
+    final oscuro = Color.lerp(dominio.color, Colors.black, 0.18)!;
 
     return Semantics(
       button: true,
       label: '${dominio.etiqueta}, $detalle',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: _Glass(
-            radio: 18,
-            opacidad: 0.6,
-            tinte: Colors.white,
-            child: Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: dominio.color,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Icon(
-                    dominio.icono,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        dominio.etiqueta,
-                        style: AppTheme.titulo(
-                          22,
-                          height: 1.15,
+      excludeSemantics: true,
+      child: Glass(
+        radio: 22,
+        padding: EdgeInsets.zero,
+        opacidad: 0.62,
+        tinte: Colors.white,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(22),
+            splashColor: dominio.color.withValues(alpha: 0.10),
+            highlightColor: dominio.color.withValues(alpha: 0.06),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    clipBehavior: Clip.antiAlias,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [dominio.color, oscuro],
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        detalle,
-                        style: AppTheme.cuerpo(17),
-                      ),
-                      const SizedBox(height: 10),
-                      _Barra(
-                        valor: n == 0 ? 0 : hechas / n,
-                        color: AppColors.naranja,
-                        fondo: AppColors.borde,
-                        alto: 6,
-                      ),
-                    ],
+                      child: Icon(dominio.icono, color: Colors.white, size: 30),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          dominio.etiqueta,
+                          style: AppTheme.titulo(22, height: 1.15),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(detalle, style: AppTheme.cuerpo(17)),
+                        const SizedBox(height: 12),
+                        _Barra(
+                          valor: n == 0 ? 0 : hechas / n,
+                          color: AppColors.naranja,
+                          fondo: AppColors.borde,
+                          alto: 6,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textoSuave,
+                    size: 28,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -454,10 +375,7 @@ class _TarjetaDominio extends StatelessWidget {
 }
 
 class _BarraInferior extends StatelessWidget {
-  const _BarraInferior({
-    required this.onProgreso,
-    required this.onAjustes,
-  });
+  const _BarraInferior({required this.onProgreso, required this.onAjustes});
 
   final VoidCallback onProgreso;
   final VoidCallback onAjustes;
@@ -466,26 +384,16 @@ class _BarraInferior extends StatelessWidget {
   Widget build(BuildContext context) => SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            20,
-            0,
-            20,
-            12,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
           child: Center(
-            
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: Bp.anchoFlujo - 40,
-              ),
-              child: _Glass(
-                radio: 28,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 6,
-                ),
-                opacidad: 0.75,
+              constraints: const BoxConstraints(maxWidth: Bp.anchoFlujo - 40),
+              child: Glass(
+                radio: 30,
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                opacidad: 0.72,
                 tinte: Colors.white,
-                blur: 20,
+                blur: 22,
                 child: Row(
                   children: [
                     const Expanded(
@@ -539,29 +447,23 @@ class _ItemBarra extends StatelessWidget {
         excludeSemantics: true,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 10,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 46,
+                  width: 48,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: activo
-                        ? AppColors.naranja
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
+                    color: activo ? AppColors.naranja : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     icono,
                     size: 22,
-                    color: activo
-                        ? Colors.white
-                        : AppColors.textoSuave,
+                    color: activo ? Colors.white : AppColors.textoSuave,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -569,12 +471,8 @@ class _ItemBarra extends StatelessWidget {
                   etiqueta,
                   style: AppTheme.cuerpo(
                     14,
-                    color: activo
-                        ? AppColors.texto
-                        : AppColors.textoSuave,
-                    weight: activo
-                        ? FontWeight.w700
-                        : FontWeight.w500,
+                    color: activo ? AppColors.texto : AppColors.textoSuave,
+                    weight: activo ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
               ],
