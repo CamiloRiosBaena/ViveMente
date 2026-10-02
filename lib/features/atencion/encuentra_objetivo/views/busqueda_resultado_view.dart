@@ -4,6 +4,7 @@ import 'package:vivamente/core/constants/app_colors.dart';
 import 'package:vivamente/core/theme/app_theme.dart';
 import 'package:vivamente/core/widgets/boton_grande.dart';
 import 'package:vivamente/core/widgets/boton_secundario.dart';
+import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/encuentra_objetivo_game.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/models/metricas_busqueda.dart';
@@ -79,13 +80,11 @@ class _Puntaje extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
         label: 'Objetivo $objetivo. Puntaje $puntaje de 100',
         excludeSemantics: true,
-        child: Container(
+        child: Glass(
+          radio: 18,
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.verdeSuave,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.verde, width: 2),
-          ),
+          opacidad: 0.6,
+          tinte: AppColors.verdeSuave,
           child: Row(
             children: [
               Column(
@@ -117,19 +116,19 @@ class _Cifra extends StatelessWidget {
   final String valor;
 
   @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borde, width: 2),
-        ),
-        child: Row(
-          children: [
-            Expanded(child: Text(etiqueta, style: AppTheme.cuerpo(19, color: AppColors.texto))),
-            Text(valor, style: AppTheme.titulo(22, color: AppColors.texto)),
-          ],
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Glass(
+          radio: 16,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          opacidad: 0.6,
+          tinte: Colors.white,
+          child: Row(
+            children: [
+              Expanded(child: Text(etiqueta, style: AppTheme.cuerpo(19, color: AppColors.texto))),
+              Text(valor, style: AppTheme.titulo(22, color: AppColors.texto)),
+            ],
+          ),
         ),
       );
 }

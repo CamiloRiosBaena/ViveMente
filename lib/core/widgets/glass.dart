@@ -12,6 +12,8 @@ class Glass extends StatelessWidget {
     this.opacidad = 0.55,
     this.blur = 16,
     this.tinte,
+    this.borde,
+    this.anchoBorde = 1,
   });
 
   final Widget child;
@@ -20,30 +22,56 @@ class Glass extends StatelessWidget {
   final double opacidad;
   final double blur;
   final Color? tinte;
+  final Color? borde;
+  final double anchoBorde;
 
   @override
-  Widget build(BuildContext context) => ClipRRect(
+  Widget build(BuildContext context) {
+    final base = tinte ?? Colors.white;
+    final arriba = (opacidad + 0.12).clamp(0.0, 1.0);
+    final abajo = (opacidad - 0.12).clamp(0.0, 1.0);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radio),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(radio),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: (tinte ?? Colors.white).withValues(alpha: opacidad),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  base.withValues(alpha: arriba),
+                  base.withValues(alpha: abajo),
+                ],
+              ),
               borderRadius: BorderRadius.circular(radio),
               border: Border.all(
-                color: AppColors.borde.withValues(alpha: 0.5),
+                color: borde ?? AppColors.borde.withValues(alpha: 0.45),
+                width: anchoBorde,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                ),
-              ],
             ),
             child: child,
           ),
         ),
-      );
+      ),
+    );
+  }
 }

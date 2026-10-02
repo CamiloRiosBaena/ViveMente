@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vivamente/core/constants/app_colors.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
+import 'package:vivamente/core/widgets/fondo_glass.dart';
+import 'package:vivamente/core/widgets/glass.dart';
 
 /// Esqueleto de las pantallas del flujo: cabecera de color, cuerpo y, opcionalmente,
 /// un pie fijo con el botón de avance. Cuerpo y pie se centran en [Bp.anchoFlujo].
@@ -27,21 +29,37 @@ class PantallaFlujo extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: fondo,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Stack(
         children: [
-          cabecera,
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(m, paddingSuperior, m, 0),
-              child: cuerpo,
-            ),
+          const Positioned.fill(child: FondoPremium()),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              cabecera,
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(m, paddingSuperior, m, 0),
+                  child: cuerpo,
+                ),
+              ),
+              if (pie != null)
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(m, 10, m, 12),
+                    child: Glass(
+                      radio: 24,
+                      padding: const EdgeInsets.all(12),
+                      opacidad: 0.72,
+                      blur: 20,
+                      tinte: Colors.white,
+                      borde: AppColors.borde.withValues(alpha: 0.52),
+                      child: pie!,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          if (pie != null)
-            SafeArea(
-              top: false,
-              child: Padding(padding: EdgeInsets.fromLTRB(m, 16, m, 24), child: pie),
-            ),
         ],
       ),
     );

@@ -6,6 +6,7 @@ import 'package:vivamente/core/theme/app_theme.dart';
 import 'package:vivamente/core/widgets/boton_grande.dart';
 import 'package:vivamente/core/widgets/boton_secundario.dart';
 import 'package:vivamente/core/widgets/campo_etiquetado.dart';
+import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/encuentra_objetivo_game.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/models/estimulo.dart';
@@ -82,13 +83,11 @@ class _Consigna extends StatelessWidget {
   final Objetivo objetivo;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => Glass(
+        radio: 20,
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.naranjaSuave,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.borde, width: 2),
-        ),
+        opacidad: 0.6,
+        tinte: AppColors.naranjaSuave,
         child: Row(
           children: [
             Expanded(
@@ -123,13 +122,11 @@ class _Ejemplo extends StatelessWidget {
   final List<Estimulo> otros;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => Glass(
+        radio: 18,
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.borde, width: 2),
-        ),
+        opacidad: 0.6,
+        tinte: Colors.white,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
