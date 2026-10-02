@@ -8,8 +8,9 @@ import 'package:vivamente/core/theme/dominio_estilo.dart';
 import 'package:vivamente/core/widgets/boton_grande.dart';
 import 'package:vivamente/core/widgets/boton_secundario.dart';
 import 'package:vivamente/core/widgets/cabecera_flujo.dart';
+import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
-import 'package:vivamente/core/widgets/tarjeta_elegible.dart';
+
 import 'package:vivamente/features/juegos/providers/juegos_provider.dart';
 import 'package:vivamente/features/juegos/providers/resultados_provider.dart';
 import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
@@ -113,7 +114,7 @@ class DominioView extends ConsumerWidget {
   }
 }
 
-class _TarjetaActividad extends ConsumerWidget {
+class _TarjetaActividad extends ConsumerStatefulWidget {
   const _TarjetaActividad({
     required this.numero,
     required this.juego,
@@ -127,63 +128,97 @@ class _TarjetaActividad extends ConsumerWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_TarjetaActividad> createState() => _TarjetaActividadState();
+}
+
+class _TarjetaActividadState extends ConsumerState<_TarjetaActividad> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final juego = widget.juego;
+    final numero = widget.numero;
+    final esSiguiente = widget.esSiguiente;
+
     final hechos = ref.watch(nivelesHechosProvider(juego.id));
     final completa = ref.watch(juegoCompletoProvider(juego.id));
     final total = Dificultad.values.length;
     final minutos = (juego.duracionEstimada.inSeconds / 60).ceil();
 
-    final (estado, colorEstado) = completa
+    final (estado, colorBase) = completa
         ? ('Completa', AppColors.verdeTexto)
         : esSiguiente
-            ? ('Siguiente', AppColors.naranja)
+            ? ('Siguiente', AppColors.textoSuave)
             : ('Pendiente', AppColors.textoSuave);
+
+    // Todas las tarjetas pendientes (incluida la "siguiente") parten neutras
+    // y pasan a naranja solo con el mouse encima. La completa se queda en verde.
+    final colorEstado = completa
+        ? colorBase
+        : _hover
+            ? AppColors.naranja
+            : colorBase;
+    final colorContenedor = completa
+        ? AppColors.verde
+        : _hover
+            ? AppColors.naranja
+            : AppColors.crema;
+    final resaltada = _hover && !completa;
+
     final detalle = completa
         ? '$estado · $total de $total niveles'
         : '$estado · Nivel ${juego.dificultad.nivel} · $minutos min';
 
-    return TarjetaElegible(
-      onTap: onTap,
-      seleccionada: esSiguiente,
-      radio: 18,
-      padding: const EdgeInsets.all(16),
-      etiquetaSemantica: 'Actividad $numero, ${juego.titulo}, $detalle, '
+    return Semantics(
+      button: true,
+      selected: esSiguiente,
+      label: 'Actividad $numero, ${juego.titulo}, $detalle, '
           '${hechos.length} de $total niveles hechos',
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: completa
-                  ? AppColors.verde
-                  : esSiguiente
-                      ? AppColors.naranja
-                      : AppColors.crema,
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: completa
-                ? const Icon(Icons.check_rounded, color: Colors.white, size: 30)
-                : Text(
-                    '$numero',
-                    style: AppTheme.titulo(22, color: esSiguiente ? Colors.white : AppColors.textoSuave),
-                  ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          onHover: (v) => setState(() => _hover = v),
+          borderRadius: BorderRadius.circular(18),
+          child: Glass(
+            radio: 18,
+            opacidad: 0.6,
+            tinte: Colors.white,
+            child: Row(
               children: [
-                Text(juego.titulo, style: AppTheme.titulo(22, height: 1.15)),
-                const SizedBox(height: 2),
-                Text(detalle, style: AppTheme.cuerpo(17, color: colorEstado, weight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                _Niveles(hechos: hechos),
+                Container(
+                  width: 52,
+                  height: 52,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: colorContenedor,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: completa
+                      ? const Icon(Icons.check_rounded, color: Colors.white, size: 30)
+                      : Text(
+                          '$numero',
+                          style: AppTheme.titulo(22, color: resaltada ? Colors.white : AppColors.textoSuave),
+                        ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(juego.titulo, style: AppTheme.titulo(22, height: 1.15)),
+                      const SizedBox(height: 2),
+                      Text(detalle, style: AppTheme.cuerpo(17, color: colorEstado, weight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      _Niveles(hechos: hechos),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
