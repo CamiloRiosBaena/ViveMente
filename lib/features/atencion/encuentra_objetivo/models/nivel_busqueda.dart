@@ -35,7 +35,23 @@ class NivelBusqueda {
 
   static const duracion = Duration(minutes: 2);
 
+  /// Tope de la práctica; casi siempre termina antes, al hallar los objetivos.
+  static const duracionPractica = Duration(minutes: 1);
+
+  static const objetivosPractica = 3;
+
   int get casillas => columnas * filas;
+
+  /// Cuadrícula corta para practicar, con los mismos distractores del nivel.
+  NivelBusqueda get practica => NivelBusqueda(
+        dificultad: dificultad,
+        columnas: 4,
+        filas: 3,
+        objetivosMin: objetivosPractica,
+        objetivosMax: objetivosPractica,
+        variedad: variedad,
+        proporcionParecidos: proporcionParecidos,
+      );
 
   static const _nivel1 = NivelBusqueda(
     dificultad: Dificultad.facil,

@@ -16,6 +16,7 @@ import 'package:vivamente/features/atencion/encuentra_objetivo/widgets/ficha_est
 import 'package:vivamente/features/juegos/widgets/refuerzo.dart';
 
 /// Ronda de búsqueda: objetivo arriba, cronómetro y aciertos, y la cuadrícula.
+/// Sirve para la práctica y para la ronda medida.
 class BusquedaJuegoView extends ConsumerWidget {
   const BusquedaJuegoView({super.key, required this.onSalir});
 
@@ -38,7 +39,7 @@ class BusquedaJuegoView extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Cabecera(objetivo: s.objetivo, onPausa: notifier.pausar),
+              _Cabecera(objetivo: s.objetivo, practica: s.enPractica, onPausa: notifier.pausar),
               Padding(
                 padding: EdgeInsets.fromLTRB(m, 14, m, 0),
                 child: Row(
@@ -55,7 +56,10 @@ class BusquedaJuegoView extends ConsumerWidget {
                     Expanded(
                       child: _Dato(
                         etiqueta: 'Acertados',
-                        valor: '${s.metricas.aciertos}',
+                        // En la práctica se sabe cuántos hay: ayuda a ver que se terminó.
+                        valor: s.enPractica
+                            ? '${s.metricas.aciertos} de ${s.metricas.disponibles}'
+                            : '${s.metricas.aciertos}',
                         icono: Icons.check_circle_outline_rounded,
                       ),
                     ),
@@ -102,9 +106,10 @@ class BusquedaJuegoView extends ConsumerWidget {
 
 /// «ENCUENTRA LA LETRA: A», con el objetivo grande y claro.
 class _Cabecera extends StatelessWidget {
-  const _Cabecera({required this.objetivo, required this.onPausa});
+  const _Cabecera({required this.objetivo, required this.practica, required this.onPausa});
 
   final Objetivo objetivo;
+  final bool practica;
   final VoidCallback onPausa;
 
   @override
@@ -141,11 +146,21 @@ class _Cabecera extends StatelessWidget {
               Expanded(
                 child: Semantics(
                   header: true,
-                  label: '${objetivo.encabezado} ${objetivo.simbolo}',
+                  label: '${practica ? 'Práctica. ' : ''}${objetivo.encabezado} ${objetivo.simbolo}',
                   excludeSemantics: true,
-                  child: Text(
-                    '${objetivo.encabezado}:'.toUpperCase(),
-                    style: AppTheme.titulo(21, color: Colors.white, height: 1.15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (practica)
+                        Text(
+                          'PRÁCTICA',
+                          style: AppTheme.mono(13, color: AppColors.ambar, letterSpacing: 1.5, weight: FontWeight.w600),
+                        ),
+                      Text(
+                        '${objetivo.encabezado}:'.toUpperCase(),
+                        style: AppTheme.titulo(21, color: Colors.white, height: 1.15),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -214,8 +229,8 @@ class _Cuadricula extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cols = estado.nivel.columnas;
-    final filas = estado.nivel.filas;
+    final cols = estado.rejilla.columnas;
+    final filas = estado.rejilla.filas;
 
     return LayoutBuilder(
       builder: (context, limites) {

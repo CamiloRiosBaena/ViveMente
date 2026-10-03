@@ -4,18 +4,19 @@ import 'package:vivamente/core/constants/app_colors.dart';
 import 'package:vivamente/core/services/voz.dart';
 import 'package:vivamente/core/theme/app_theme.dart';
 import 'package:vivamente/core/widgets/boton_grande.dart';
-import 'package:vivamente/core/widgets/boton_secundario.dart';
 import 'package:vivamente/core/widgets/campo_etiquetado.dart';
 import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
+import 'package:vivamente/core/widgets/pie_con_lectura.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/encuentra_objetivo_game.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/models/estimulo.dart';
+import 'package:vivamente/features/atencion/encuentra_objetivo/models/nivel_busqueda.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/providers/encuentra_objetivo_provider.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/widgets/ficha_estimulo.dart';
 import 'package:vivamente/features/juegos/widgets/cabecera_juego.dart';
 import 'package:vivamente/features/juegos/widgets/selector_dificultad.dart';
 
-/// Objetivo del intento, ejemplo y nivel antes de pulsar INICIAR.
+/// Objetivo del intento, ejemplo y nivel antes de la práctica.
 class BusquedaInstruccionesView extends ConsumerWidget {
   const BusquedaInstruccionesView({super.key, required this.onBack});
 
@@ -55,23 +56,18 @@ class BusquedaInstruccionesView extends ConsumerWidget {
             const SizedBox(height: 14),
             Text(
               'Nivel ${s.nivel.dificultad.nivel} · 2 minutos · '
-              'cuadrícula de ${s.nivel.columnas} × ${s.nivel.filas}.',
+              'cuadrícula de ${s.nivel.columnas} × ${s.nivel.filas}. '
+              'Antes hay una práctica corta con ${NivelBusqueda.objetivosPractica} objetivos.',
               style: AppTheme.cuerpo(18, height: 1.4),
             ),
             const SizedBox(height: 16),
           ],
         ),
       ),
-      pie: Column(
-        children: [
-          BotonGrande(texto: 'Iniciar', onPressed: notifier.iniciar),
-          const SizedBox(height: 12),
-          BotonSecundario(
-            texto: leyendo ? 'Detener la lectura' : 'Escuchar la instrucción',
-            icono: leyendo ? Icons.stop_rounded : Icons.volume_up_rounded,
-            onPressed: notifier.escucharInstruccion,
-          ),
-        ],
+      pie: PieConLectura(
+        leyendo: leyendo,
+        onEscuchar: notifier.escucharInstruccion,
+        principal: BotonGrande(texto: 'Hacer la práctica', onPressed: notifier.empezarPractica),
       ),
     );
   }

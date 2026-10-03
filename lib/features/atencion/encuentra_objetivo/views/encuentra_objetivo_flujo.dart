@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/providers/encuentra_objetivo_provider.dart';
+import 'package:vivamente/features/atencion/encuentra_objetivo/views/busqueda_fin_practica_view.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/views/busqueda_instrucciones_view.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/views/busqueda_juego_view.dart';
 import 'package:vivamente/features/atencion/encuentra_objetivo/views/busqueda_resultado_view.dart';
 
 /// Pantallas de «Encuentra el objetivo» según la fase del provider:
-/// instrucciones → cuadrícula → resultado.
+/// instrucciones → práctica → fin de práctica → ronda medida → resultado.
 class EncuentraObjetivoFlujo extends ConsumerStatefulWidget {
   const EncuentraObjetivoFlujo({super.key, required this.onBack});
 
@@ -35,16 +36,18 @@ class _EncuentraObjetivoFlujoState extends ConsumerState<EncuentraObjetivoFlujo>
   @override
   Widget build(BuildContext context) {
     final fase = ref.watch(encuentraObjetivoProvider.select((s) => s.fase));
+    final jugando = fase == FaseBusqueda.practica || fase == FaseBusqueda.prueba;
 
     return PopScope(
       // En plena ronda, «atrás» del sistema pausa en vez de salir.
-      canPop: fase != FaseBusqueda.jugando,
+      canPop: !jugando,
       onPopInvokedWithResult: (salio, _) {
         if (!salio) ref.read(encuentraObjetivoProvider.notifier).pausar();
       },
       child: switch (fase) {
         FaseBusqueda.instrucciones => BusquedaInstruccionesView(onBack: widget.onBack),
-        FaseBusqueda.jugando => BusquedaJuegoView(onSalir: widget.onBack),
+        FaseBusqueda.practica || FaseBusqueda.prueba => BusquedaJuegoView(onSalir: widget.onBack),
+        FaseBusqueda.finPractica => const BusquedaFinPracticaView(),
         FaseBusqueda.resultado => BusquedaResultadoView(onVolver: widget.onBack),
       },
     );

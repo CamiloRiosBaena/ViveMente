@@ -13,7 +13,7 @@ import 'package:vivamente/features/atencion/encuentra_objetivo/models/nivel_busq
 import 'package:vivamente/features/juegos/providers/juegos_provider.dart';
 import 'package:vivamente/features/juegos/providers/resultados_provider.dart';
 
-enum FaseBusqueda { instrucciones, jugando, resultado }
+enum FaseBusqueda { instrucciones, practica, finPractica, prueba, resultado }
 
 /// Refuerzo breve tras cada toque.
 enum RetroBusqueda { ninguna, correcto, incorrecto }
@@ -25,6 +25,7 @@ class EncuentraObjetivoState {
     required this.casillas,
     required this.ejemplos,
     required this.metricas,
+    NivelBusqueda? rejilla,
     this.fase = FaseBusqueda.instrucciones,
     this.encontradas = const {},
     this.transcurrido = Duration.zero,
@@ -33,9 +34,13 @@ class EncuentraObjetivoState {
     this.retroId = 0,
     this.casillaError,
     this.resultado,
-  });
+  }) : rejilla = rejilla ?? nivel;
 
   final NivelBusqueda nivel;
+
+  /// Medidas de la cuadrícula en pantalla: la corta en la práctica, la del
+  /// nivel en la ronda medida.
+  final NivelBusqueda rejilla;
 
   /// Lo que hay que encontrar en este intento.
   final Objetivo objetivo;
@@ -63,10 +68,15 @@ class EncuentraObjetivoState {
   /// Listo al terminar la ronda.
   final ResultadoJuego? resultado;
 
-  bool get jugando => fase == FaseBusqueda.jugando;
+  /// En una ronda con cuadrícula: la práctica o la medida.
+  bool get jugando => fase == FaseBusqueda.practica || fase == FaseBusqueda.prueba;
+  bool get enPractica => fase == FaseBusqueda.practica;
+
+  /// Tiempo máximo de la ronda en curso.
+  Duration get limite => enPractica ? NivelBusqueda.duracionPractica : NivelBusqueda.duracion;
 
   Duration get restante {
-    final r = NivelBusqueda.duracion - transcurrido;
+    final r = limite - transcurrido;
     return r.isNegative ? Duration.zero : r;
   }
 
@@ -74,7 +84,7 @@ class EncuentraObjetivoState {
   String get textoTiempo => formatoReloj(Duration(seconds: (restante.inMilliseconds / 1000).ceil()));
 
   /// Fracción de tiempo que queda.
-  double get tiempoRestante => restante.inMilliseconds / NivelBusqueda.duracion.inMilliseconds;
+  double get tiempoRestante => restante.inMilliseconds / limite.inMilliseconds;
 
   bool esObjetivo(int i) => casillas[i] == objetivo.estimulo;
 
@@ -82,7 +92,7 @@ class EncuentraObjetivoState {
   String get instruccion => 'Encuentre ${objetivo.todos}. '
       'Toque solo esas; las demás no cuentan. '
       'Tiene 2 minutos. Nivel ${nivel.dificultad.nivel}. '
-      'Cuando esté listo, toque Iniciar.';
+      'Antes hay una práctica corta. Cuando esté listo, toque Hacer la práctica.';
 
   EncuentraObjetivoState copyWith({
     FaseBusqueda? fase,
@@ -100,6 +110,7 @@ class EncuentraObjetivoState {
         objetivo: objetivo,
         casillas: casillas,
         ejemplos: ejemplos,
+        rejilla: rejilla,
         fase: fase ?? this.fase,
         encontradas: encontradas ?? this.encontradas,
         transcurrido: transcurrido ?? this.transcurrido,
@@ -149,26 +160,73 @@ class EncuentraObjetivoNotifier extends Notifier<EncuentraObjetivoState> {
   EncuentraObjetivoState _nuevoIntento(Dificultad dificultad) {
     final nivel = NivelBusqueda.de(dificultad);
     final objetivo = _generador.elegirObjetivo(dificultad);
-    final casillas = _generador.cuadricula(nivel, objetivo);
+    return _armar(
+      FaseBusqueda.instrucciones,
+      nivel: nivel,
+      objetivo: objetivo,
+      rejilla: nivel,
+      ejemplos: _generador.ejemplos(nivel, objetivo),
+    );
+  }
+
+  /// Estado limpio con una cuadrícula nueva de [rejilla] para el mismo objetivo.
+  EncuentraObjetivoState _armar(
+    FaseBusqueda fase, {
+    required NivelBusqueda nivel,
+    required Objetivo objetivo,
+    required NivelBusqueda rejilla,
+    required List<Estimulo> ejemplos,
+  }) {
+    final casillas = _generador.cuadricula(rejilla, objetivo);
     return EncuentraObjetivoState(
       nivel: nivel,
       objetivo: objetivo,
       casillas: casillas,
-      ejemplos: _generador.ejemplos(nivel, objetivo),
+      ejemplos: ejemplos,
+      rejilla: rejilla,
+      fase: fase,
       metricas: MetricasBusqueda(disponibles: casillas.where((c) => c == objetivo.estimulo).length),
     );
   }
 
+  /// La misma consigna con otra cuadrícula: la corta para practicar o la del nivel.
+  EncuentraObjetivoState _otraRonda(FaseBusqueda fase) => _armar(
+        fase,
+        nivel: state.nivel,
+        objetivo: state.objetivo,
+        rejilla: fase == FaseBusqueda.practica ? state.nivel.practica : state.nivel,
+        ejemplos: state.ejemplos,
+      );
+
   void escucharInstruccion() => ref.read(lecturaProvider.notifier).alternar(state.instruccion);
 
-  /// Botón INICIAR: empieza a correr el cronómetro de 2 minutos.
-  void iniciar() {
-    if (state.fase != FaseBusqueda.instrucciones) return;
+  /// Ronda corta que no se registra. Se hace desde las instrucciones o, para
+  /// repetirla, desde el fin de la práctica.
+  void empezarPractica() {
+    if (state.fase != FaseBusqueda.instrucciones && state.fase != FaseBusqueda.finPractica) return;
+    _arrancar(FaseBusqueda.practica);
+  }
+
+  /// Ronda medida de 2 minutos. Solo después de la práctica.
+  void empezarPrueba() {
+    if (state.fase != FaseBusqueda.finPractica) return;
+    _arrancar(FaseBusqueda.prueba);
+  }
+
+  /// Del fin de la práctica a las instrucciones, con el mismo objetivo.
+  void verInstrucciones() {
+    _detenerTimer();
+    _reloj.reiniciar();
+    state = _otraRonda(FaseBusqueda.instrucciones);
+  }
+
+  void _arrancar(FaseBusqueda fase) {
     ref.read(lecturaProvider.notifier).detener();
+    _detenerTimer();
     _reloj
       ..reiniciar()
       ..iniciar();
-    state = state.copyWith(fase: FaseBusqueda.jugando);
+    state = _otraRonda(fase);
     _iniciarTimer();
   }
 
@@ -233,7 +291,7 @@ class EncuentraObjetivoNotifier extends Notifier<EncuentraObjetivoState> {
   void actualizar() {
     if (!state.jugando || state.pausado) return;
     final t = _reloj.transcurrido;
-    if (t >= NivelBusqueda.duracion) return _terminar(NivelBusqueda.duracion);
+    if (t >= state.limite) return _terminar(state.limite);
 
     var s = state;
     if (s.retro != RetroBusqueda.ninguna && t >= _retroHasta) {
@@ -247,11 +305,21 @@ class EncuentraObjetivoNotifier extends Notifier<EncuentraObjetivoState> {
   }
 
   /// Guarda el resultado del nivel al terminar, sin esperar a que salga de la
-  /// pantalla: así «Repetir» no lo pierde.
+  /// pantalla: así «Repetir» no lo pierde. La práctica no se guarda.
   void _terminar(Duration t) {
     _detenerTimer();
     _reloj.detener();
     final metricas = state.metricas.copyWith(tiempo: t);
+    if (state.enPractica) {
+      state = state.copyWith(
+        fase: FaseBusqueda.finPractica,
+        transcurrido: t,
+        metricas: metricas,
+        retro: RetroBusqueda.ninguna,
+        casillaError: () => null,
+      );
+      return;
+    }
     final resultado = metricas.aResultado(state.nivel.dificultad);
     state = state.copyWith(
       fase: FaseBusqueda.resultado,

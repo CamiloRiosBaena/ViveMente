@@ -140,14 +140,79 @@ void main() {
       juego().actualizar();
     }
 
-    test('no se puede tocar antes de INICIAR', () {
+    /// Hace la práctica completa y entra a la ronda medida.
+    void aLaPrueba() {
+      juego().empezarPractica();
+      for (final o in objetivos()) {
+        juego().tocar(o);
+      }
+      juego().empezarPrueba();
+    }
+
+    test('no se puede tocar antes de la práctica', () {
       juego().tocar(objetivos().first);
       expect(estado().metricas.aciertos, 0);
       expect(estado().textoTiempo, '02:00');
     });
 
+    test('no se puede saltar la práctica', () {
+      juego().empezarPrueba();
+      expect(estado().fase, FaseBusqueda.instrucciones);
+    });
+
+    test('la práctica usa una cuadrícula corta, no se registra y lleva al fin de práctica', () {
+      final objetivo = estado().objetivo.simbolo;
+      juego().empezarPractica();
+
+      expect(estado().fase, FaseBusqueda.practica);
+      expect(estado().casillas, hasLength(NivelBusqueda.de(Dificultad.facil).practica.casillas));
+      expect(estado().rejilla.columnas, 4);
+      expect(estado().metricas.disponibles, NivelBusqueda.objetivosPractica);
+      expect(estado().textoTiempo, '01:00');
+      expect(estado().objetivo.simbolo, objetivo);
+
+      juego().tocar(unDistractor());
+      for (final o in objetivos()) {
+        juego().tocar(o);
+      }
+      expect(estado().fase, FaseBusqueda.finPractica);
+      expect(estado().metricas.aciertos, NivelBusqueda.objetivosPractica);
+      expect(estado().metricas.errores, 1);
+      expect(c.read(nivelesHechosProvider(_id)), isEmpty);
+
+      // Se puede repetir; luego la ronda medida trae la cuadrícula del nivel.
+      juego().empezarPractica();
+      expect(estado().fase, FaseBusqueda.practica);
+      expect(estado().metricas.aciertos, 0);
+      for (final o in objetivos()) {
+        juego().tocar(o);
+      }
+      juego().empezarPrueba();
+      expect(estado().fase, FaseBusqueda.prueba);
+      expect(estado().casillas, hasLength(NivelBusqueda.de(Dificultad.facil).casillas));
+      expect(estado().objetivo.simbolo, objetivo);
+      expect(estado().textoTiempo, '02:00');
+    });
+
+    test('la práctica se cierra al minuto aunque falten objetivos', () {
+      juego().empezarPractica();
+      avanzar(60000);
+      expect(estado().fase, FaseBusqueda.finPractica);
+      expect(estado().metricas.aciertos, 0);
+    });
+
+    test('del fin de la práctica se puede volver a las instrucciones', () {
+      juego().empezarPractica();
+      for (final o in objetivos()) {
+        juego().tocar(o);
+      }
+      juego().verInstrucciones();
+      expect(estado().fase, FaseBusqueda.instrucciones);
+      expect(estado().casillas, hasLength(NivelBusqueda.de(Dificultad.facil).casillas));
+    });
+
     test('acierto marca la casilla una sola vez; error no suma y deja seguir', () {
-      juego().iniciar();
+      aLaPrueba();
       final o = objetivos().first;
 
       juego().tocar(o);
@@ -174,7 +239,7 @@ void main() {
     });
 
     test('termina al encontrar todos, registra solo ese nivel y conserva el resultado', () {
-      juego().iniciar();
+      aLaPrueba();
       avanzar(30000);
       for (final o in objetivos()) {
         juego().tocar(o);
@@ -192,7 +257,7 @@ void main() {
     });
 
     test('termina a los 2 minutos con lo que haya encontrado', () {
-      juego().iniciar();
+      aLaPrueba();
       juego().tocar(objetivos().first);
       avanzar(60000);
       expect(estado().textoTiempo, '01:00');
@@ -203,7 +268,7 @@ void main() {
     });
 
     test('en pausa el tiempo no corre ni cuentan los toques', () {
-      juego().iniciar();
+      aLaPrueba();
       avanzar(5000);
       juego().pausar();
       avanzar(20000);
@@ -217,7 +282,7 @@ void main() {
 
     test('repetir arma otra cuadrícula con otro objetivo en el mismo nivel', () {
       final antes = estado().objetivo.simbolo;
-      juego().iniciar();
+      aLaPrueba();
       for (final o in objetivos()) {
         juego().tocar(o);
       }
