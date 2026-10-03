@@ -3,16 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vivamente/core/constants/app_colors.dart';
 import 'package:vivamente/core/models/game.dart';
-import 'package:vivamente/core/models/persona.dart';
 import 'package:vivamente/core/theme/app_theme.dart';
-import 'package:vivamente/core/theme/dominio_estilo.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
 import 'package:vivamente/core/widgets/cabecera_marca.dart';
 import 'package:vivamente/core/widgets/fondo_glass.dart';
-
 import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/features/juegos/providers/juegos_provider.dart';
 import 'package:vivamente/features/juegos/providers/resultados_provider.dart';
+import 'package:vivamente/features/session/widgets/barra_navegacion_inicio.dart';
+import 'package:vivamente/features/session/widgets/inicio_encabezado.dart';
+import 'package:vivamente/features/session/widgets/tarjeta_dominio.dart';
 import 'package:vivamente/features/session/providers/sesion_provider.dart';
 import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
 
@@ -51,20 +51,135 @@ class _InicioState extends ConsumerState<_Inicio> {
   Future<void> _ajustes() async {
     final salir = await showModalBottomSheet<bool>(
       context: context,
-      builder: (_) => SafeArea(
-        child: ListTile(
-          leading: const Icon(Icons.logout_rounded),
-          title: Text(
-            'Cerrar sesión',
-            style: AppTheme.cuerpo(19, color: AppColors.texto),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+          child: Glass(
+            radio: 24,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            opacidad: 0.82,
+            blur: 22,
+            tinte: AppColors.papel,
+            borde: Colors.white.withValues(alpha: 0.72),
+            child: Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.naranjaSuave,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.logout_rounded, color: AppColors.naranjaTexto),
+                ),
+                title: Text(
+                  'Cerrar sesión',
+                  style: AppTheme.cuerpo(19, color: AppColors.texto, weight: FontWeight.w600),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textoSuave),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                onTap: () => Navigator.of(sheetContext).pop(true),
+              ),
+            ),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          onTap: () => Navigator.of(context).pop(true),
         ),
       ),
     );
 
     if (salir != true || !mounted) return;
+
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Glass(
+          radio: 26,
+          padding: const EdgeInsets.all(24),
+          opacidad: 0.86,
+          blur: 24,
+          tinte: AppColors.papel,
+          borde: Colors.white.withValues(alpha: 0.78),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.naranjaSuave,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: const Icon(Icons.logout_rounded, color: AppColors.naranjaTexto),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '¿Seguro que quieres cerrar sesión?',
+                style: AppTheme.titulo(24, height: 1.2),
+              ),
+              const SizedBox(height: 24),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final estiloCancelar = TextButton.styleFrom(
+                    foregroundColor: AppColors.textoSuave,
+                    backgroundColor: AppColors.crema,
+                    shadowColor: AppColors.cafe.withValues(alpha: 0.18),
+                    elevation: 2,
+                    minimumSize: const Size.fromHeight(44),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  );
+                  final cancelar = TextButton(
+                    style: estiloCancelar,
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: Text('Cancelar', style: AppTheme.cuerpo(17, color: AppColors.textoSuave)),
+                  );
+                  final cerrar = FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      textStyle: AppTheme.titulo(18, color: Colors.white),
+                    ),
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    icon: const Icon(Icons.logout_rounded, size: 18),
+                    label: const Text('Cerrar sesión'),
+                  );
+
+                  if (constraints.maxWidth < 360) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        cerrar,
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: double.infinity,
+                          child: cancelar,
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [cancelar, const SizedBox(width: 8), cerrar],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmar != true || !mounted) return;
 
     ScaffoldMessenger.of(context).clearSnackBars();
     ref.read(sesionProvider.notifier).cerrar();
@@ -77,7 +192,12 @@ class _InicioState extends ConsumerState<_Inicio> {
     final progreso = ref.watch(progresoProvider);
 
     final total = Dominio.values.fold<int>(0, (s, d) => s + d.cantidadActividades);
-    final hechas = progreso.values.fold<int>(0, (s, n) => s + n);
+    final juegos = ref.watch(juegosProvider);
+    final nivelesHechos = juegos.fold<int>(
+      0,
+      (s, juego) => s + ref.watch(nivelesHechosProvider(juego.id)).length,
+    );
+    final totalNiveles = total * Dificultad.values.length;
 
     final m = Bp.margenFlujo(context);
     final dominios = Dominio.values.toList();
@@ -93,9 +213,9 @@ class _InicioState extends ConsumerState<_Inicio> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Saludo(saludo: _saludo, adulto: adulto),
+                    SaludoInicio(saludo: _saludo, adulto: adulto),
                     const SizedBox(height: 20),
-                    _TarjetaProgreso(hechas: hechas, total: total),
+                    TarjetaProgreso(nivelesHechos: nivelesHechos, totalNiveles: totalNiveles),
                   ],
                 ),
               ),
@@ -123,7 +243,7 @@ class _InicioState extends ConsumerState<_Inicio> {
                       )
                     else
                       for (final d in dominios) ...[
-                        _TarjetaDominio(
+                        TarjetaDominio(
                           dominio: d,
                           hechas: progreso[d] ?? 0,
                           onTap: ref.watch(juegosDeDominioProvider(d)).isEmpty
@@ -143,8 +263,8 @@ class _InicioState extends ConsumerState<_Inicio> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: _BarraInferior(
-              onProgreso: () => _aviso('El progreso estará disponible pronto.'),
+            child: BarraNavegacionInicio(
+              onProgreso: () => context.push('/progreso'),
               onAjustes: _ajustes,
             ),
           ),
@@ -152,332 +272,4 @@ class _InicioState extends ConsumerState<_Inicio> {
       ),
     );
   }
-}
-
-class _Saludo extends StatelessWidget {
-  const _Saludo({required this.saludo, required this.adulto});
-
-  final String saludo;
-  final Adulto adulto;
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  saludo,
-                  style: AppTheme.cuerpo(
-                    19,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    adulto.primerNombre,
-                    style: AppTheme.titulo(32, color: Colors.white, height: 1.15),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Container(
-            width: 56,
-            height: 56,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-            ),
-            child: Text(
-              adulto.iniciales,
-              style: AppTheme.titulo(19, color: Colors.white),
-            ),
-          ),
-        ],
-      );
-}
-
-class _TarjetaProgreso extends StatelessWidget {
-  const _TarjetaProgreso({required this.hechas, required this.total});
-
-  final int hechas;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final valor = total == 0 ? 0.0 : hechas / total;
-    final porcentaje = (valor * 100).round();
-
-    return Semantics(
-      label: 'Tu avance en la valoración: $porcentaje por ciento completado',
-      excludeSemantics: true,
-      child: Glass(
-        radio: 20,
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
-        opacidad: 0.16,
-        tinte: Colors.white,
-        borde: Colors.white.withValues(alpha: 0.30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Tu avance en la valoración',
-              style: AppTheme.cuerpo(
-                16,
-                color: Colors.white.withValues(alpha: 0.85),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _Barra(
-                    valor: valor,
-                    color: AppColors.ambar,
-                    fondo: Colors.white24,
-                    alto: 10,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  '$porcentaje %',
-                  style: AppTheme.titulo(20, color: Colors.white),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Barra extends StatelessWidget {
-  const _Barra({
-    required this.valor,
-    required this.color,
-    required this.fondo,
-    this.alto = 8,
-  });
-
-  final double valor;
-  final Color color;
-  final Color fondo;
-  final double alto;
-
-  @override
-  Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(99),
-        child: LinearProgressIndicator(
-          value: valor.clamp(0, 1),
-          minHeight: alto,
-          color: color,
-          backgroundColor: fondo,
-        ),
-      );
-}
-
-class _TarjetaDominio extends StatelessWidget {
-  const _TarjetaDominio({
-    required this.dominio,
-    required this.hechas,
-    required this.onTap,
-  });
-
-  final Dominio dominio;
-  final int hechas;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final n = dominio.cantidadActividades;
-    final detalle = '$n actividades · $hechas ${hechas == 1 ? 'hecha' : 'hechas'}';
-    final oscuro = Color.lerp(dominio.color, Colors.black, 0.18)!;
-
-    return Semantics(
-      button: true,
-      label: '${dominio.etiqueta}, $detalle',
-      excludeSemantics: true,
-      child: Glass(
-        radio: 22,
-        padding: EdgeInsets.zero,
-        opacidad: 0.62,
-        tinte: Colors.white,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(22),
-            splashColor: dominio.color.withValues(alpha: 0.10),
-            highlightColor: dominio.color.withValues(alpha: 0.06),
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    clipBehavior: Clip.antiAlias,
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [dominio.color, oscuro],
-                        ),
-                      ),
-                      child: Icon(dominio.icono, color: Colors.white, size: 30),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          dominio.etiqueta,
-                          style: AppTheme.titulo(22, height: 1.15),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(detalle, style: AppTheme.cuerpo(17)),
-                        const SizedBox(height: 12),
-                        _Barra(
-                          valor: n == 0 ? 0 : hechas / n,
-                          color: AppColors.naranja,
-                          fondo: AppColors.borde,
-                          alto: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.textoSuave,
-                    size: 28,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BarraInferior extends StatelessWidget {
-  const _BarraInferior({required this.onProgreso, required this.onAjustes});
-
-  final VoidCallback onProgreso;
-  final VoidCallback onAjustes;
-
-  @override
-  Widget build(BuildContext context) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: Bp.anchoFlujo - 40),
-              child: Glass(
-                radio: 30,
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                opacidad: 0.72,
-                tinte: Colors.white,
-                blur: 22,
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: _ItemBarra(
-                        icono: Icons.home_rounded,
-                        etiqueta: 'Inicio',
-                        activo: true,
-                      ),
-                    ),
-                    Expanded(
-                      child: _ItemBarra(
-                        icono: Icons.insights_outlined,
-                        etiqueta: 'Progreso',
-                        onTap: onProgreso,
-                      ),
-                    ),
-                    Expanded(
-                      child: _ItemBarra(
-                        icono: Icons.settings_outlined,
-                        etiqueta: 'Ajustes',
-                        onTap: onAjustes,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-}
-
-class _ItemBarra extends StatelessWidget {
-  const _ItemBarra({
-    required this.icono,
-    required this.etiqueta,
-    this.activo = false,
-    this.onTap,
-  });
-
-  final IconData icono;
-  final String etiqueta;
-  final bool activo;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-        button: true,
-        selected: activo,
-        label: etiqueta,
-        excludeSemantics: true,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 48,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: activo ? AppColors.naranja : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    icono,
-                    size: 22,
-                    color: activo ? Colors.white : AppColors.textoSuave,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  etiqueta,
-                  style: AppTheme.cuerpo(
-                    14,
-                    color: activo ? AppColors.texto : AppColors.textoSuave,
-                    weight: activo ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
 }
