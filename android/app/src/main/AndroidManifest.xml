@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internet para los datos, las fuentes y el mapa de la ubicación. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <!-- Micrófono para dictar palabras en «Palabras con una letra». -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- GPS para verificar dónde se aplica la valoración. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="vivamente"
         android:name="${applicationName}"

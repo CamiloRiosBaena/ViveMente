@@ -12,7 +12,7 @@ import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
 
 const _sexos = ['Femenino', 'Masculino'];
 
-/// Paso 3 de 3 · Datos del adulto mayor nuevo.
+/// Paso 4 de 4 · Datos del adulto mayor nuevo.
 class AdultoDatosView extends ConsumerStatefulWidget {
   const AdultoDatosView({super.key});
 
@@ -73,7 +73,7 @@ class _AdultoDatosViewState extends ConsumerState<AdultoDatosView> {
       permite: (s) => s.hayEvaluador && s.cedulaAdulto.isNotEmpty,
       destino: '/',
       child: PantallaRegistro(
-        paso: 3,
+        paso: 4,
         onAtras: () => volverOIr(context, '/adulto/cedula'),
         titulo: 'Datos del\nadulto mayor',
         cuerpo: Form(

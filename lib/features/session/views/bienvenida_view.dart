@@ -66,7 +66,7 @@ class BienvenidaView extends StatelessWidget {
             SizedBox(height: 12 * a),
             Text(
               'Son actividades cortas y se hacen de una sola vez. '
-              'Busca un lugar tranquilo y con buena luz.',
+              'Busca un lugar tranquilo, con buena luz y conexión a internet.',
               style: AppTheme.cuerpo(20 * a, height: 1.4),
             ),
             SizedBox(height: 16 * a),
@@ -82,7 +82,7 @@ class BienvenidaView extends StatelessWidget {
       pie: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          BotonGrande(texto: 'Realizar prueba', onPressed: () => context.push('/evaluador')),
+          BotonGrande(texto: 'Realizar prueba', onPressed: () => context.push('/ubicacion')),
           const SizedBox(height: 16),
           const _SeparadorO(),
           const SizedBox(height: 16),

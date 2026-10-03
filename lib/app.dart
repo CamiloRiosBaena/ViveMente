@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vivamente/core/theme/app_theme.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
+import 'package:vivamente/core/widgets/aviso_sin_conexion.dart';
 import 'package:vivamente/routes/app_routes.dart';
 
 class MyApp extends StatelessWidget {
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
         final factor = mq.textScaler.scale(1) * (Bp.esCelular(context) ? 1.0 : 1.12);
         return MediaQuery(
           data: mq.copyWith(textScaler: TextScaler.linear(factor.clamp(1.0, 1.3))),
-          child: child!,
+          child: AvisoSinConexion(child: child!),
         );
       },
     );

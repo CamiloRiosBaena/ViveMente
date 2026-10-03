@@ -1,46 +1,58 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vivamente/core/models/localidad.dart';
 import 'package:vivamente/core/models/persona.dart';
 import 'package:vivamente/core/services/registro_repository.dart';
 
 class SesionState {
-  const SesionState({this.evaluador, this.cedulaAdulto = '', this.adulto});
+  const SesionState({this.ubicacion, this.evaluador, this.cedulaAdulto = '', this.adulto});
 
+  /// Dónde se aplica: se verifica por GPS antes de todo lo demás.
+  final Ubicacion? ubicacion;
   final Evaluador? evaluador;
 
   /// Cédula escrita en el paso 2; sirve al paso 3 cuando el adulto aún no existe.
   final String cedulaAdulto;
   final Adulto? adulto;
 
-  bool get hayEvaluador => evaluador != null;
-  bool get lista => evaluador != null && adulto != null;
+  bool get hayUbicacion => ubicacion != null;
+  bool get hayEvaluador => ubicacion != null && evaluador != null;
+  bool get lista => hayEvaluador && adulto != null;
 }
 
-/// Sesión de la valoración: primero quién la aplica, luego a quién.
+/// Sesión de la valoración: primero dónde, luego quién la aplica y a quién.
 class SesionNotifier extends Notifier<SesionState> {
   @override
   SesionState build() => const SesionState();
 
   RegistroRepository get _registro => ref.read(registroProvider);
 
+  /// Punto de partida: cambiar la ubicación reinicia el resto de la sesión.
+  void fijarUbicacion(Ubicacion u) => state = SesionState(ubicacion: u);
+
   /// Verifica la cédula del evaluador. Si existe, queda en sesión y devuelve `true`;
   /// si no, devuelve `false` y la vista pide el nombre para [registrarEvaluador].
   Future<bool> iniciarConCedula(String cedula) async {
     final e = await _registro.buscarEvaluador(cedula);
     if (e == null) return false;
-    state = SesionState(evaluador: e);
+    state = SesionState(ubicacion: state.ubicacion, evaluador: e);
     return true;
   }
 
   Future<void> registrarEvaluador(String cedula, String nombreCompleto) async {
     final e = await _registro.registrarEvaluador(cedula, nombreCompleto);
-    state = SesionState(evaluador: e);
+    state = SesionState(ubicacion: state.ubicacion, evaluador: e);
   }
 
   /// Busca al adulto por cédula. Si ya está registrado queda en sesión y devuelve
   /// `true`; si no, devuelve `false` y se sigue al paso de datos.
   Future<bool> elegirAdulto(String cedula) async {
     final a = await _registro.buscarAdulto(cedula);
-    state = SesionState(evaluador: state.evaluador, cedulaAdulto: cedula, adulto: a);
+    state = SesionState(
+      ubicacion: state.ubicacion,
+      evaluador: state.evaluador,
+      cedulaAdulto: cedula,
+      adulto: a,
+    );
     return a != null;
   }
 
@@ -66,7 +78,12 @@ class SesionNotifier extends Notifier<SesionState> {
         apellidos: apellidos,
       ),
     ));
-    state = SesionState(evaluador: state.evaluador, cedulaAdulto: state.cedulaAdulto, adulto: a);
+    state = SesionState(
+      ubicacion: state.ubicacion,
+      evaluador: state.evaluador,
+      cedulaAdulto: state.cedulaAdulto,
+      adulto: a,
+    );
   }
 
   void cerrar() => state = const SesionState();

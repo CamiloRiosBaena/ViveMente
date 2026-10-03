@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:vivamente/core/utils/cedula.dart';
 import 'package:vivamente/core/widgets/boton_grande.dart';
 import 'package:vivamente/core/widgets/campo_etiquetado.dart';
+import 'package:vivamente/core/widgets/pantalla_flujo.dart';
 import 'package:vivamente/core/widgets/pantalla_registro.dart';
 import 'package:vivamente/features/session/providers/sesion_provider.dart';
+import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
 
-/// Paso 1 de 3 · ¿Quién aplica? Se verifica la cédula: si el evaluador ya existe
+/// Paso 2 de 4 · ¿Quién aplica? Se verifica la cédula: si el evaluador ya existe
 /// se entra directo; si no, se pide el nombre una sola vez.
 class EvaluadorView extends ConsumerStatefulWidget {
   const EvaluadorView({super.key});
@@ -59,47 +61,51 @@ class _EvaluadorViewState extends ConsumerState<EvaluadorView> {
 
   @override
   Widget build(BuildContext context) {
-    return PantallaRegistro(
-      paso: 1,
-      icono: Icons.person_outline_rounded,
-      titulo: '¿Quién aplica\nla valoración?',
-      subtitulo: 'Queda registrado con la fecha y hora de cada sesión para efectos de auditoría.',
-      cuerpo: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CampoEtiquetado(
-            etiqueta: 'Cédula del evaluador',
-            controller: _cedula,
-            autofocus: true,
-            habilitado: !_cargando,
-            teclado: TextInputType.number,
-            formatos: formatosCedula,
-            accion: _nuevo ? TextInputAction.next : TextInputAction.done,
-            onChanged: _alCambiarCedula,
-            onEnviar: _nuevo ? null : _continuar,
-            ayuda: 'Este dato no se puede editar una vez guardada la sesión.',
-          ),
-          if (_nuevo) ...[
-            const SizedBox(height: 22),
+    return GuardaSesion(
+      permite: (s) => s.hayUbicacion,
+      destino: '/ubicacion',
+      child: PantallaRegistro(
+        paso: 2,
+        onAtras: () => volverOIr(context, '/ubicacion'),
+        titulo: '¿Quién aplica\nla valoración?',
+        subtitulo: 'Queda registrado con la fecha y hora de cada sesión para efectos de auditoría.',
+        cuerpo: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             CampoEtiquetado(
-              etiqueta: 'Nombre del evaluador',
-              controller: _nombre,
-              focusNode: _foco,
+              etiqueta: 'Cédula del evaluador',
+              controller: _cedula,
+              autofocus: true,
               habilitado: !_cargando,
-              mayusculas: TextCapitalization.words,
-              accion: TextInputAction.done,
-              onChanged: (_) => setState(() {}),
-              onEnviar: _continuar,
-              ayuda: 'Es la primera vez que ingresa con esta cédula. '
-                  'Escriba su nombre; quedará guardado para las próximas sesiones.',
+              teclado: TextInputType.number,
+              formatos: formatosCedula,
+              accion: _nuevo ? TextInputAction.next : TextInputAction.done,
+              onChanged: _alCambiarCedula,
+              onEnviar: _nuevo ? null : _continuar,
+              ayuda: 'Este dato no se puede editar una vez guardada la sesión.',
             ),
+            if (_nuevo) ...[
+              const SizedBox(height: 22),
+              CampoEtiquetado(
+                etiqueta: 'Nombre del evaluador',
+                controller: _nombre,
+                focusNode: _foco,
+                habilitado: !_cargando,
+                mayusculas: TextCapitalization.words,
+                accion: TextInputAction.done,
+                onChanged: (_) => setState(() {}),
+                onEnviar: _continuar,
+                ayuda: 'Es la primera vez que ingresa con esta cédula. '
+                    'Escriba su nombre; quedará guardado para las próximas sesiones.',
+              ),
+            ],
           ],
-        ],
-      ),
-      boton: BotonGrande(
-        texto: _nuevo ? 'Guardar y continuar' : 'Continuar',
-        cargando: _cargando,
-        onPressed: _puedeContinuar ? _continuar : null,
+        ),
+        boton: BotonGrande(
+          texto: _nuevo ? 'Guardar y continuar' : 'Continuar',
+          cargando: _cargando,
+          onPressed: _puedeContinuar ? _continuar : null,
+        ),
       ),
     );
   }

@@ -9,7 +9,7 @@ import 'package:vivamente/core/widgets/pantalla_registro.dart';
 import 'package:vivamente/features/session/providers/sesion_provider.dart';
 import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
 
-/// Paso 2 de 3 · Cédula del adulto mayor. Si ya está registrado se salta el
+/// Paso 3 de 4 · Cédula del adulto mayor. Si ya está registrado se salta el
 /// paso de datos y se entra al inicio.
 class AdultoCedulaView extends ConsumerStatefulWidget {
   const AdultoCedulaView({super.key});
@@ -53,7 +53,7 @@ class _AdultoCedulaViewState extends ConsumerState<AdultoCedulaView> {
       permite: (s) => s.hayEvaluador,
       destino: '/',
       child: PantallaRegistro(
-        paso: 2,
+        paso: 3,
         onAtras: () => volverOIr(context, '/evaluador'),
         titulo: 'Cédula del adulto\nmayor',
         subtitulo: 'Identificación del adulto mayor para registro de los resultados',

@@ -66,6 +66,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>La ubicación se usa para verificar que la valoración se aplica en una localidad habilitada.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>El micrófono se usa para dictar las palabras en las actividades de fluidez verbal.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

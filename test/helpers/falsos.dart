@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:vivamente/core/services/conexion.dart';
 import 'package:vivamente/core/services/dictado.dart';
 import 'package:vivamente/core/services/reloj.dart';
+import 'package:vivamente/core/services/ubicacion.dart';
 import 'package:vivamente/core/services/voz.dart';
 
 /// Reloj que solo avanza cuando la prueba lo pide.
@@ -115,4 +119,44 @@ class DictadoFalso implements Dictado {
     _final = true;
     _alTerminar?.call();
   }
+}
+
+/// GPS que devuelve [punto] o lanza [fallo] según lo fije la prueba.
+class LectorUbicacionFalso implements LectorUbicacion {
+  Punto punto = (latitud: 4.6017, longitud: -74.0697, precisionMetros: 10);
+  FalloUbicacion? fallo;
+  int lecturas = 0;
+
+  @override
+  Future<Punto> leer() async {
+    lecturas++;
+    if (fallo != null) throw UbicacionException(fallo!);
+    return punto;
+  }
+
+  @override
+  Future<bool> abrirAjustes(FalloUbicacion fallo) async => false;
+
+  @override
+  double distancia(double lat1, double lng1, double lat2, double lng2) =>
+      LectorGps().distancia(lat1, lng1, lat2, lng2);
+}
+
+/// Red que la prueba enciende y apaga con [poner].
+class ConexionFalsa implements Conexion {
+  ConexionFalsa({this.hay = true});
+
+  bool hay;
+  final _cambios = StreamController<bool>.broadcast();
+
+  void poner(bool valor) {
+    hay = valor;
+    _cambios.add(valor);
+  }
+
+  @override
+  Future<bool> actual() async => hay;
+
+  @override
+  Stream<bool> get cambios => _cambios.stream;
 }

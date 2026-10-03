@@ -6,7 +6,7 @@ import 'package:vivamente/core/widgets/fondo_glass.dart';
 import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
 
-/// Esqueleto de los tres pasos de registro (evaluador, cédula, datos): sin
+/// Esqueleto de los cuatro pasos de registro (ubicación, evaluador, cédula, datos): sin
 /// cabecera de color; título grande, cuerpo, botón y, al pie, los puntos de
 /// avance con el logo de la UNAD.
 class PantallaRegistro extends StatelessWidget {
@@ -21,7 +21,7 @@ class PantallaRegistro extends StatelessWidget {
     this.onAtras,
   });
 
-  static const totalPasos = 3;
+  static const totalPasos = 4;
 
   /// Paso actual, de 1 a [totalPasos].
   final int paso;
@@ -33,7 +33,7 @@ class PantallaRegistro extends StatelessWidget {
   /// Ficha con ícono sobre el título (primer paso).
   final IconData? icono;
 
-  /// Si se pasa, arriba aparecen la flecha de regreso y la barra «n de 3».
+  /// Si se pasa, arriba aparecen la flecha de regreso y la barra «n de 4».
   final VoidCallback? onAtras;
 
   @override

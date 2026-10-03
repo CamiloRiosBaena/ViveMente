@@ -12,6 +12,7 @@ import 'package:vivamente/features/session/views/bienvenida_view.dart';
 import 'package:vivamente/features/session/views/evaluador_view.dart';
 import 'package:vivamente/features/session/views/inicio_view.dart';
 import 'package:vivamente/features/session/views/progreso_view.dart';
+import 'package:vivamente/features/session/views/ubicacion_view.dart';
 import 'package:vivamente/features/splash/views/splash_screen.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -19,6 +20,7 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
     GoRoute(path: '/', builder: (_, _) => const BienvenidaView()),
+    GoRoute(path: '/ubicacion', builder: (_, _) => const UbicacionView()),
     GoRoute(path: '/evaluador', builder: (_, _) => const EvaluadorView()),
     GoRoute(path: '/adulto/cedula', builder: (_, _) => const AdultoCedulaView()),
     GoRoute(path: '/adulto/datos', builder: (_, _) => const AdultoDatosView()),
