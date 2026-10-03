@@ -4,9 +4,9 @@ import 'package:vivamente/core/constants/app_colors.dart';
 import 'package:vivamente/core/services/voz.dart';
 import 'package:vivamente/core/theme/app_theme.dart';
 import 'package:vivamente/core/widgets/boton_grande.dart';
-import 'package:vivamente/core/widgets/boton_secundario.dart';
 import 'package:vivamente/core/widgets/campo_etiquetado.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
+import 'package:vivamente/core/widgets/pie_con_lectura.dart';
 import 'package:vivamente/features/atencion/tren_senales/models/nivel_tren.dart';
 import 'package:vivamente/features/atencion/tren_senales/models/tren.dart';
 import 'package:vivamente/features/atencion/tren_senales/providers/tren_senales_provider.dart';
@@ -64,16 +64,10 @@ class TrenInstruccionesView extends ConsumerWidget {
           ],
         ),
       ),
-      pie: Column(
-        children: [
-          BotonGrande(texto: 'Hacer la práctica', onPressed: notifier.empezarPractica),
-          const SizedBox(height: 12),
-          BotonSecundario(
-            texto: leyendo ? 'Detener la lectura' : 'Escuchar la instrucción',
-            icono: leyendo ? Icons.stop_rounded : Icons.volume_up_rounded,
-            onPressed: notifier.escucharInstruccion,
-          ),
-        ],
+      pie: PieConLectura(
+        leyendo: leyendo,
+        onEscuchar: notifier.escucharInstruccion,
+        principal: BotonGrande(texto: 'Hacer la práctica', onPressed: notifier.empezarPractica),
       ),
     );
   }

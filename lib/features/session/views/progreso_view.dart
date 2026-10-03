@@ -10,6 +10,7 @@ import 'package:vivamente/core/widgets/glass.dart';
 import 'package:vivamente/core/widgets/pantalla_flujo.dart';
 import 'package:vivamente/features/juegos/providers/juegos_provider.dart';
 import 'package:vivamente/features/juegos/providers/resultados_provider.dart';
+import 'package:vivamente/features/session/widgets/barra_navegacion_inicio.dart';
 import 'package:vivamente/features/session/widgets/barra_progreso.dart';
 import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
 
@@ -48,8 +49,9 @@ class _ContenidoProgreso extends ConsumerWidget {
           ),
         ),
       ),
+      barra: const BarraNavegacionInicio(actual: SeccionInicio.progreso),
       cuerpo: ListView(
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.only(bottom: BarraNavegacionInicio.alto),
         children: [
           _ResumenProgreso(
             completadas: completadas,

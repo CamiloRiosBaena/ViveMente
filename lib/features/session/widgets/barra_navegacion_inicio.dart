@@ -1,21 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:vivamente/core/constants/app_colors.dart';
 import 'package:vivamente/core/theme/app_theme.dart';
 import 'package:vivamente/core/utils/breakpoints.dart';
 import 'package:vivamente/core/widgets/glass.dart';
+import 'package:vivamente/features/session/widgets/ajustes_sesion.dart';
 
-class BarraNavegacionInicio extends StatelessWidget {
-  const BarraNavegacionInicio({
-    super.key,
-    required this.onProgreso,
-    required this.onAjustes,
-  });
+enum SeccionInicio { inicio, progreso }
 
-  final VoidCallback onProgreso;
-  final VoidCallback onAjustes;
+/// Barra inferior de Inicio y Progreso. Marca la sección [actual] y navega
+/// a las demás; Progreso se abre encima de Inicio, así que volver es un pop.
+class BarraNavegacionInicio extends ConsumerWidget {
+  const BarraNavegacionInicio({super.key, required this.actual});
+
+  final SeccionInicio actual;
+
+  /// Alto que ocupa sobre el contenido, para dejarle ese espacio libre abajo.
+  static const alto = 136.0;
+
+  void _ir(BuildContext context, SeccionInicio destino) {
+    if (destino == actual) return;
+    switch (destino) {
+      case SeccionInicio.inicio:
+        context.canPop() ? context.pop() : context.go('/inicio');
+      case SeccionInicio.progreso:
+        context.push('/progreso');
+    }
+  }
 
   @override
-  Widget build(BuildContext context) => SafeArea(
+  Widget build(BuildContext context, WidgetRef ref) => SafeArea(
     top: false,
     child: Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -30,25 +45,27 @@ class BarraNavegacionInicio extends StatelessWidget {
             blur: 22,
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: _ItemBarra(
                     icono: Icons.home_rounded,
                     etiqueta: 'Inicio',
-                    activo: true,
+                    activo: actual == SeccionInicio.inicio,
+                    onTap: () => _ir(context, SeccionInicio.inicio),
                   ),
                 ),
                 Expanded(
                   child: _ItemBarra(
                     icono: Icons.insights_outlined,
                     etiqueta: 'Progreso',
-                    onTap: onProgreso,
+                    activo: actual == SeccionInicio.progreso,
+                    onTap: () => _ir(context, SeccionInicio.progreso),
                   ),
                 ),
                 Expanded(
                   child: _ItemBarra(
                     icono: Icons.settings_outlined,
                     etiqueta: 'Ajustes',
-                    onTap: onAjustes,
+                    onTap: () => abrirAjustes(context, ref),
                   ),
                 ),
               ],

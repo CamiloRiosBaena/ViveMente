@@ -13,6 +13,7 @@ class PantallaFlujo extends StatelessWidget {
     required this.cabecera,
     required this.cuerpo,
     this.pie,
+    this.barra,
     this.fondo = AppColors.papel,
     this.paddingSuperior = 22,
   });
@@ -20,6 +21,10 @@ class PantallaFlujo extends StatelessWidget {
   final Widget cabecera;
   final Widget cuerpo;
   final Widget? pie;
+
+  /// Barra de navegación que flota abajo, sobre el cuerpo. El cuerpo debe
+  /// dejarle espacio al final de su lista.
+  final Widget? barra;
   final Color fondo;
   final double paddingSuperior;
 
@@ -60,6 +65,7 @@ class PantallaFlujo extends StatelessWidget {
                 ),
             ],
           ),
+          if (barra != null) Positioned(left: 0, right: 0, bottom: 0, child: barra!),
         ],
       ),
     );
