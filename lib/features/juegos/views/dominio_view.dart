@@ -15,12 +15,21 @@ import 'package:vivamente/features/juegos/providers/juegos_provider.dart';
 import 'package:vivamente/features/juegos/providers/resultados_provider.dart';
 import 'package:vivamente/features/session/widgets/guarda_sesion.dart';
 
-/// Actividades de un dominio, con la siguiente por hacer resaltada. Una
-/// actividad queda hecha solo cuando se completan sus tres niveles.
-class DominioView extends ConsumerWidget {
+/// Actividades de un dominio. Se seleccionan desde la lista y se inician con
+/// el botón inferior. Una actividad queda hecha al completar sus tres niveles.
+class DominioView extends ConsumerStatefulWidget {
   const DominioView({super.key, required this.dominio});
 
   final Dominio dominio;
+
+  @override
+  ConsumerState<DominioView> createState() => _DominioViewState();
+}
+
+class _DominioViewState extends ConsumerState<DominioView> {
+  String? _juegoSeleccionadoId;
+
+  Dominio get dominio => widget.dominio;
 
   Future<void> _reiniciar(BuildContext context, WidgetRef ref, int niveles) async {
     final confirmar = await showDialog<bool>(
@@ -60,10 +69,12 @@ class DominioView extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final juegos = ref.watch(juegosDeDominioProvider(dominio));
     final siguiente = ref.watch(siguienteJuegoProvider(dominio));
     final nivelesHechos = ref.watch(nivelesHechosDominioProvider(dominio));
+    final seleccionada = juegos.where((j) => j.id == _juegoSeleccionadoId).firstOrNull ?? siguiente;
+    final seleccionadaCompleta = seleccionada == null ? false : ref.watch(juegoCompletoProvider(seleccionada.id));
     void volver() => volverOIr(context, '/inicio');
 
     return GuardaSesion(
@@ -87,17 +98,18 @@ class DominioView extends ConsumerWidget {
             numero: i + 1,
             juego: juegos[i],
             esSiguiente: juegos[i].id == siguiente?.id,
-            onTap: () => context.push('/juego/${juegos[i].id}'),
+            esSeleccionada: juegos[i].id == seleccionada?.id,
+            onTap: () => setState(() => _juegoSeleccionadoId = juegos[i].id),
           ),
         ),
         pie: Column(
           children: [
-            if (siguiente == null)
+            if (seleccionada == null)
               BotonGrande(texto: 'Volver al inicio', onPressed: volver)
             else
               BotonGrande(
-                texto: 'Empezar actividad ${juegos.indexOf(siguiente) + 1}',
-                onPressed: () => context.push('/juego/${siguiente.id}'),
+                texto: '${seleccionadaCompleta ? 'Repetir' : 'Empezar'} actividad ${juegos.indexOf(seleccionada) + 1}',
+                onPressed: () => context.push('/juego/${seleccionada.id}'),
               ),
             if (nivelesHechos > 0) ...[
               const SizedBox(height: 12),
@@ -114,31 +126,27 @@ class DominioView extends ConsumerWidget {
   }
 }
 
-class _TarjetaActividad extends ConsumerStatefulWidget {
+class _TarjetaActividad extends ConsumerWidget {
   const _TarjetaActividad({
     required this.numero,
     required this.juego,
     required this.esSiguiente,
+    required this.esSeleccionada,
     required this.onTap,
   });
 
   final int numero;
   final Game juego;
   final bool esSiguiente;
+  final bool esSeleccionada;
   final VoidCallback onTap;
 
   @override
-  ConsumerState<_TarjetaActividad> createState() => _TarjetaActividadState();
-}
-
-class _TarjetaActividadState extends ConsumerState<_TarjetaActividad> {
-  bool _hover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final juego = widget.juego;
-    final numero = widget.numero;
-    final esSiguiente = widget.esSiguiente;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final juego = this.juego;
+    final numero = this.numero;
+    final esSiguiente = this.esSiguiente;
+    final esSeleccionada = this.esSeleccionada;
 
     final hechos = ref.watch(nivelesHechosProvider(juego.id));
     final completa = ref.watch(juegoCompletoProvider(juego.id));
@@ -151,19 +159,14 @@ class _TarjetaActividadState extends ConsumerState<_TarjetaActividad> {
             ? ('Siguiente', AppColors.textoSuave)
             : ('Pendiente', AppColors.textoSuave);
 
-    // Todas las tarjetas pendientes (incluida la "siguiente") parten neutras
-    // y pasan a naranja solo con el mouse encima. La completa se queda en verde.
-    final colorEstado = completa
-        ? colorBase
-        : _hover
-            ? AppColors.naranja
-            : colorBase;
+    final resaltada = esSeleccionada && !completa;
+    final colorEstado = completa ? colorBase : resaltada ? AppColors.naranja : colorBase;
     final colorContenedor = completa
         ? AppColors.verde
-        : _hover
+      : resaltada
             ? AppColors.naranja
             : AppColors.crema;
-    final resaltada = _hover && !completa;
+            
 
     final detalle = completa
         ? '$estado · $total de $total niveles'
@@ -171,20 +174,21 @@ class _TarjetaActividadState extends ConsumerState<_TarjetaActividad> {
 
     return Semantics(
       button: true,
-      selected: esSiguiente,
+      selected: esSeleccionada,
       label: 'Actividad $numero, ${juego.titulo}, $detalle, '
           '${hechos.length} de $total niveles hechos',
       excludeSemantics: true,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: widget.onTap,
-          onHover: (v) => setState(() => _hover = v),
+          onTap: onTap,
           borderRadius: BorderRadius.circular(18),
           child: Glass(
             radio: 18,
             opacidad: 0.6,
             tinte: Colors.white,
+            borde: esSeleccionada ? juego.dominio.color.withValues(alpha: 0.62) : null,
+            anchoBorde: esSeleccionada ? 1.5 : 1,
             child: Row(
               children: [
                 Container(
